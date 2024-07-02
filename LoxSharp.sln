@@ -3,12 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoxSharp", "LoxSharp\LoxSharp.csproj", "{0831B2E4-2B29-4D8F-9E8F-67379BDABC1E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoxSharp", "LoxSharp\LoxSharp.csproj", "{0831B2E4-2B29-4D8F-9E8F-67379BDABC1E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{BC3995FB-1DD4-4FC6-AA7C-7DEC2377C0C8} = {BC3995FB-1DD4-4FC6-AA7C-7DEC2377C0C8}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoxSharp.Core", "LoxSharp.Core\LoxSharp.Core.csproj", "{BC3995FB-1DD4-4FC6-AA7C-7DEC2377C0C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoxSharp.Core", "LoxSharp.Core\LoxSharp.Core.csproj", "{BC3995FB-1DD4-4FC6-AA7C-7DEC2377C0C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tool.GenerateAst", "Tool.GenerateAst\Tool.GenerateAst.csproj", "{A917983A-DFF8-4E8B-9F70-FA5CCAAAB831}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +26,10 @@ Global
 		{BC3995FB-1DD4-4FC6-AA7C-7DEC2377C0C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC3995FB-1DD4-4FC6-AA7C-7DEC2377C0C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC3995FB-1DD4-4FC6-AA7C-7DEC2377C0C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A917983A-DFF8-4E8B-9F70-FA5CCAAAB831}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A917983A-DFF8-4E8B-9F70-FA5CCAAAB831}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A917983A-DFF8-4E8B-9F70-FA5CCAAAB831}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A917983A-DFF8-4E8B-9F70-FA5CCAAAB831}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

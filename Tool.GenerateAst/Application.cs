@@ -2,13 +2,13 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace LoxSharp
+namespace Tool.GenerateAst
 {
     public class Application
     {
         public IReadOnlyList<string> Arguments { get; }
 
-        private readonly Runtime runtime;
+        private readonly AstBuilder builder;
         private readonly ILogger logger;
 
         public Application(string[] args)
@@ -19,7 +19,7 @@ namespace LoxSharp
             ConfigureServices(serviceCollection);
             var serviceProvider = serviceCollection.BuildServiceProvider();
             logger = serviceProvider.GetRequiredService<ILogger<Application>>();
-            runtime = serviceProvider.GetRequiredService<Runtime>();
+            builder = serviceProvider.GetRequiredService<AstBuilder>();
         }
 
         private static void ConfigureServices(IServiceCollection serviceDescriptors)
@@ -28,34 +28,41 @@ namespace LoxSharp
             serviceDescriptors.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
             serviceDescriptors.AddLogging(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Debug));
 
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", false)
-                .Build();
+            {
+                var configuration = new ConfigurationBuilder()
+                    .SetBasePath(AppContext.BaseDirectory)
+                    .AddJsonFile("appsettings.json", false)
+                    .Build();
 
-            serviceDescriptors.AddSingleton(configuration);
-            serviceDescriptors.AddSingleton<Runtime>();
+                serviceDescriptors.AddSingleton(configuration);
+            }
+            {
+                var configuration = new ConfigurationBuilder()
+                    .SetBasePath(AppContext.BaseDirectory)
+                    .AddJsonFile("treeconfiguration.json")
+                    .Build();
+
+                TreeConfiguration treeConfiguration = new TreeConfiguration();
+                configuration.Bind(treeConfiguration);
+                serviceDescriptors.AddSingleton(treeConfiguration);
+            }
+            serviceDescriptors.AddSingleton<AstBuilder>();
         }
 
         public int Execute()
         {
             switch (Arguments.Count)
             {
-                case 0:
-                    runtime.RunPrompt();
-                    break;
-
                 case 1:
-                    if (!runtime.RunFile(Arguments[0]))
+                    if (!builder.BuildTree(Arguments[0]))
                     {
                         return 65;
                     }
                     break;
 
                 default:
-                    logger.LogError("usage: LoxSharp <File>");
-                    logger.LogError("       <File> Script to run (optional)");
-                    logger.LogError("When using without parameters, live compilation is availabe");
+                    logger.LogError("usage: Tool.GenerateAst <File>");
+                    logger.LogError("       <File> File to create with code for the tree");
                     return 64;
             }
             return 0;

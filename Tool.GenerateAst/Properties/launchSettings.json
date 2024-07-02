@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Tool.GenerateAst": {
+      "commandName": "Project",
+      "commandLineArgs": "../../../../LoxSharp.Core/Expr.cs"
+    }
+  }
+}

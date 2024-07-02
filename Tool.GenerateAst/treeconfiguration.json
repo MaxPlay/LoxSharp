@@ -1,0 +1,13 @@
+﻿{
+  "namespace": "LoxSharp.Core",
+  "visitor": "IVisitor",
+  "expression": "IExpr",
+  "token": "TokenType",
+  "literal": "LiteralValue",
+  "definitions": [
+    "Binary:expression left, token op, expression right",
+    "Grouping:expression expression",
+    "Literal:literal value",
+    "Unary:token op, expression right"
+  ]
+}
