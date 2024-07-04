@@ -13,33 +13,33 @@ namespace LoxSharp.Core
         T Visit(UnaryExpr expr);
     }
 
-    public class BinaryExpr(IExpr left, TokenType op, IExpr right) : IExpr
+    public class BinaryExpr(IExpr left, ILoxToken op, IExpr right) : IExpr
     {
-        private readonly IExpr left = left;
-        private readonly TokenType op = op;
-        private readonly IExpr right = right;
+        public IExpr Left { get; } = left;
+        public ILoxToken Op { get; } = op;
+        public IExpr Right { get; } = right;
 
         public T Accept<T>(IVisitor<T> visitor) => visitor.Visit(this);
     }
 
     public class GroupingExpr(IExpr expression) : IExpr
     {
-        private readonly IExpr expression = expression;
+        public IExpr Expression { get; } = expression;
 
         public T Accept<T>(IVisitor<T> visitor) => visitor.Visit(this);
     }
 
     public class LiteralExpr(LiteralValue value) : IExpr
     {
-        private readonly LiteralValue value = value;
+        public LiteralValue Value { get; } = value;
 
         public T Accept<T>(IVisitor<T> visitor) => visitor.Visit(this);
     }
 
-    public class UnaryExpr(TokenType op, IExpr right) : IExpr
+    public class UnaryExpr(ILoxToken op, IExpr right) : IExpr
     {
-        private readonly TokenType op = op;
-        private readonly IExpr right = right;
+        public ILoxToken Op { get; } = op;
+        public IExpr Right { get; } = right;
 
         public T Accept<T>(IVisitor<T> visitor) => visitor.Visit(this);
     }

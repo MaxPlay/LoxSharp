@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,18 +11,18 @@ namespace LoxSharp.Core
     {
     }
 
-    public class LiteralStringValue : LiteralValue
+    public class LiteralStringValue(string value) : LiteralValue
     {
-        public string Value { get; set; } = string.Empty;
+        public string Value { get; } = value;
 
         public override string ToString() => $@"""{Value}""";
     }
 
-    public class LiteralNumericValue : LiteralValue
+    public class LiteralNumericValue(double value) : LiteralValue
     {
-        public double Value { get; set; }
+        public double Value { get; } = value;
 
-        public override string ToString() => Value.ToString();
+        public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
     }
 
     public class  LiteralNilValue : LiteralValue

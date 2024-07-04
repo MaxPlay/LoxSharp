@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using LoxSharp.Core;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -35,6 +36,7 @@ namespace LoxSharp
 
             serviceDescriptors.AddSingleton(configuration);
             serviceDescriptors.AddSingleton<Runtime>();
+            serviceDescriptors.AddSingleton<AstPrinter>();
         }
 
         public int Execute()

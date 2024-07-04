@@ -53,35 +53,38 @@ namespace LoxSharp.Core
 
     public interface ILoxToken
     {
+        TokenType Type { get; }
+        string Lexeme { get; }
+        int Line { get; }
     }
 
     public class LoxToken(TokenType type, string lexeme, int line) : ILoxToken
     {
-        private readonly TokenType type = type;
-        private readonly string lexeme = lexeme;
-        private readonly int line = line;
+        public TokenType Type { get; } = type;
+        public string Lexeme { get; } = lexeme;
+        public int Line { get; } = line;
 
-        public override string ToString() => $"{type} {lexeme}";
+        public override string ToString() => $"{Type} {Lexeme}";
     }
 
-    public class LoxTokenNumeric(TokenType type, string lexeme, int line, double literal) : ILoxToken
+    public class LoxTokenNumeric(string lexeme, int line, double literal) : ILoxToken
     {
-        private readonly TokenType type = type;
-        private readonly string lexeme = lexeme;
-        private readonly int line = line;
-        private readonly double literal = literal;
+        public TokenType Type => TokenType.Number;
+        public string Lexeme { get; } = lexeme;
+        public int Line { get; } = line;
+        public double Literal { get; } = literal;
 
-        public override string ToString() => $"{type} {lexeme} {literal}";
+        public override string ToString() => $"{Type} {Lexeme} {Literal}";
     }
 
-    public class LoxTokenString(TokenType type, string lexeme, int line, string literal) : ILoxToken
+    public class LoxTokenString(string lexeme, int line, string literal) : ILoxToken
     {
-        private readonly TokenType type = type;
-        private readonly string lexeme = lexeme;
-        private readonly int line = line;
-        private readonly string literal = literal;
+        public TokenType Type => TokenType.String;
+        public string Lexeme { get; } = lexeme;
+        public int Line { get; } = line;
+        public string Literal { get; } = literal;
 
-        public override string ToString() => $"{type} {lexeme} {literal}";
+        public override string ToString() => $"{Type} {Lexeme} {Literal}";
     }
 
     public class Scanner
@@ -270,8 +273,8 @@ namespace LoxSharp.Core
 
         private void AddToken(TokenType type) => tokens.Add(new LoxToken(type, source[start..current], line));
 
-        private void AddToken(string literal) => tokens.Add(new LoxTokenString(TokenType.String, source[start..current], line, literal));
-        private void AddToken(double literal) => tokens.Add(new LoxTokenNumeric(TokenType.Number, source[start..current], line, literal));
+        private void AddToken(string literal) => tokens.Add(new LoxTokenString(source[start..current], line, literal));
+        private void AddToken(double literal) => tokens.Add(new LoxTokenNumeric(source[start..current], line, literal));
 
         private bool IsAtEnd() => current >= source.Length;
     }

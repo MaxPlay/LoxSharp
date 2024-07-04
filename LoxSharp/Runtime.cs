@@ -3,9 +3,10 @@ using Microsoft.Extensions.Logging;
 
 namespace LoxSharp
 {
-    public class Runtime(ILogger<Runtime> logger)
+    public class Runtime(ILogger<Runtime> logger, AstPrinter astPrinter)
     {
-        readonly ILogger logger = logger;
+        private readonly ILogger logger = logger;
+        private readonly AstPrinter astPrinter = astPrinter;
 
         public bool RunFile(string path)
         {
