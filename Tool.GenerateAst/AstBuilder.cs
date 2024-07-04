@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace Tool.GenerateAst
 {
@@ -21,6 +22,18 @@ namespace Tool.GenerateAst
             public string Type { get; set; } = string.Empty;
 
             public override string ToString() => $"{Type} {Name}";
+
+            public string ToPropertyString()
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.Append(Type);
+                builder.Append(' ');
+                if (Name.Length > 0)
+                    builder.Append(char.ToUpperInvariant(Name[0]));
+                if (Name.Length > 1)
+                    builder.Append(Name[1..]);
+                return builder.ToString();
+            }
         }
 
         private class ScopeWriter : IDisposable
@@ -156,7 +169,7 @@ namespace Tool.GenerateAst
                     using ScopeWriter classWriter = new ScopeWriter(writer);
                     foreach (var member in type.Members)
                     {
-                        classWriter.WriteLine($"private readonly {member} = {member.Name};");
+                        classWriter.WriteLine($"public {member.ToPropertyString()} {{ get; }} = {member.Name};");
                     }
                     writer.WriteLine();
                     classWriter.WriteLine($"public T Accept<T>({configuration.Visitor}<T> visitor) => visitor.Visit(this);");

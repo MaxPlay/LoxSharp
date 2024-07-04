@@ -2,7 +2,7 @@
   "namespace": "LoxSharp.Core",
   "visitor": "IVisitor",
   "expression": "IExpr",
-  "token": "TokenType",
+  "token": "ILoxToken",
   "literal": "LiteralValue",
   "definitions": [
     "Binary:expression left, token op, expression right",
