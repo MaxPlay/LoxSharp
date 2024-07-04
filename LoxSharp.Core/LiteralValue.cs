@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 
 namespace LoxSharp.Core
 {
     public abstract class LiteralValue
     {
+    }
+
+    public class LiteralBoolValue(bool value) : LiteralValue
+    {
+        public bool Value { get; } = value;
+
+        public override string ToString() => Value.ToString();
     }
 
     public class LiteralStringValue(string value) : LiteralValue
@@ -25,7 +27,7 @@ namespace LoxSharp.Core
         public override string ToString() => Value.ToString(CultureInfo.InvariantCulture);
     }
 
-    public class  LiteralNilValue : LiteralValue
+    public class LiteralNilValue : LiteralValue
     {
         public object? Value { get; } = null;
 

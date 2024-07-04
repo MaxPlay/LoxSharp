@@ -23,16 +23,19 @@ namespace LoxSharp
         private bool Run(string[] source)
         {
             Scanner scanner = new Scanner(source);
-            IReadOnlyList<ILoxToken> tokens = scanner.Tokenize(out List<ScanError> errors);
+            IReadOnlyList<ILoxToken> tokens = scanner.Tokenize(out List<LoxError> errors);
+            Parser parse = new Parser(tokens);
+            IExpr? expression = parse.Parse(out LoxError? parseError);
 
-            foreach (var token in tokens)
-            {
-                logger.LogDebug("{token}", token);
-            }
+            if (parseError != null)
+                errors.Add(parseError);
+
+            if (expression != null)
+                logger.LogDebug("{ast}",astPrinter.Print(expression));
 
             foreach (var error in errors)
             {
-                logger.LogError("Error: [{line}] Error: {message}", error.Line, error.Message);
+                logger.LogError("Error: [{line}] Error{where}: {message}", error.Line, error.Where, error.Message);
             }
             return errors.Count == 0;
         }

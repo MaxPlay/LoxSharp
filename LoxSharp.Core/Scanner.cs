@@ -122,7 +122,7 @@ namespace LoxSharp.Core
             };
         }
 
-        public IReadOnlyList<ILoxToken> Tokenize(out List<ScanError> errors)
+        public IReadOnlyList<ILoxToken> Tokenize(out List<LoxError> errors)
         {
             errors = [];
             line = 0;
@@ -139,7 +139,7 @@ namespace LoxSharp.Core
             return tokens;
         }
 
-        private void ScanToken(List<ScanError> errors)
+        private void ScanToken(List<LoxError> errors)
         {
             char c = Advance();
             switch (c)
@@ -197,7 +197,7 @@ namespace LoxSharp.Core
                     else if (char.IsLetter(c))
                         HandleIdentifier();
                     else
-                        errors.Add(new ScanError(line, "Unexpected character."));
+                        errors.Add(new LoxError(line, string.Empty, "Unexpected character."));
                     break;
             }
         }
@@ -234,7 +234,7 @@ namespace LoxSharp.Core
             AddToken(double.Parse(source[start..current])); // Should be fine, since we checked the characters
         }
 
-        private void HandleString(List<ScanError> errors)
+        private void HandleString(List<LoxError> errors)
         {
             while (Peek() != '"' && !IsAtEnd())
             {
@@ -245,7 +245,7 @@ namespace LoxSharp.Core
 
             if (IsAtEnd())
             {
-                errors.Add(new ScanError(line, "Unterminated string."));
+                errors.Add(new LoxError(line, string.Empty, "Unterminated string."));
                 return;
             }
 

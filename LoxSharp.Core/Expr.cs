@@ -1,3 +1,5 @@
+using System.Reflection.Emit;
+
 namespace LoxSharp.Core
 {
     public interface IExpr
@@ -29,9 +31,19 @@ namespace LoxSharp.Core
         public T Accept<T>(IVisitor<T> visitor) => visitor.Visit(this);
     }
 
-    public class LiteralExpr(LiteralValue value) : IExpr
+    public class LiteralExpr : IExpr
     {
-        public LiteralValue Value { get; } = value;
+        public LiteralExpr(LiteralValue value) => Value = value;
+
+        public LiteralExpr(bool value) => Value = new LiteralBoolValue(value);
+
+        public LiteralExpr(string value) => Value = new LiteralStringValue(value);
+
+        public LiteralExpr() => Value = new LiteralNilValue();
+
+        public LiteralExpr(double value) => Value = new LiteralNumericValue(value);
+
+        public LiteralValue Value { get; }
 
         public T Accept<T>(IVisitor<T> visitor) => visitor.Visit(this);
     }

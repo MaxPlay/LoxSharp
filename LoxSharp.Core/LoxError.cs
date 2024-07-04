@@ -1,8 +1,9 @@
 ﻿namespace LoxSharp.Core
 {
-    public class ScanError(int line, string message)
+    public class LoxError(int line, string where, string message)
     {
         public int Line { get; } = line;
+        public string Where { get; } = where;
         public string Message { get; } = message;
     }
 }
