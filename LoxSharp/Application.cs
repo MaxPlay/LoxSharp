@@ -37,6 +37,7 @@ namespace LoxSharp
             serviceDescriptors.AddSingleton(configuration);
             serviceDescriptors.AddSingleton<Runtime>();
             serviceDescriptors.AddSingleton<AstPrinter>();
+            serviceDescriptors.AddSingleton<Interpreter>();
         }
 
         public int Execute()
@@ -48,9 +49,12 @@ namespace LoxSharp
                     break;
 
                 case 1:
-                    if (!runtime.RunFile(Arguments[0]))
+                    switch (runtime.RunFile(Arguments[0]))
                     {
-                        return 65;
+                        case RuntimeResult.InputError:
+                            return 65;
+                        case RuntimeResult.RuntimeError:
+                            return 70;
                     }
                     break;
 

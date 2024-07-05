@@ -3,41 +3,69 @@ using Microsoft.Extensions.Logging;
 
 namespace LoxSharp
 {
-    public class Runtime(ILogger<Runtime> logger, AstPrinter astPrinter)
+    public enum RuntimeResult
+    {
+        Ok,
+        InputError,
+        RuntimeError
+    }
+
+    public class Runtime(ILogger<Runtime> logger, Interpreter interpreter)
     {
         private readonly ILogger logger = logger;
-        private readonly AstPrinter astPrinter = astPrinter;
+        private readonly Interpreter interpreter = interpreter;
 
-        public bool RunFile(string path)
+        public RuntimeResult RunFile(string path)
         {
             if (!File.Exists(path))
             {
                 logger.LogError("Could not find {path}", path);
-                return false;
+                return RuntimeResult.InputError;
             }
 
             string[] lines = File.ReadAllLines(path);
             return Run(lines);
         }
 
-        private bool Run(string[] source)
+        private RuntimeResult Run(string[] source)
         {
+            RuntimeResult runtimeResult = RuntimeResult.Ok;
+
             Scanner scanner = new Scanner(source);
             IReadOnlyList<ILoxToken> tokens = scanner.Tokenize(out List<LoxError> errors);
             Parser parse = new Parser(tokens);
             IExpr? expression = parse.Parse(out LoxError? parseError);
 
-            if (parseError != null)
+            if (parseError == null)
+            {
+                if (expression != null)
+                {
+                    string result = interpreter.Interpret(expression, out LoxError? runtimeError);
+                    if (runtimeError == null)
+                    {
+                        logger.LogInformation("{result}", result);
+                    }
+                    else
+                    {
+                        runtimeResult = RuntimeResult.RuntimeError;
+                        errors.Add(runtimeError);
+                    }
+                }
+                else
+                    throw new Exception("Parsing failed without error.");
+            }
+            else
                 errors.Add(parseError);
-
-            if (expression != null)
-                logger.LogDebug("{ast}",astPrinter.Print(expression));
 
             foreach (var error in errors)
             {
                 logger.LogError("Error: [{line}] Error{where}: {message}", error.Line, error.Where, error.Message);
             }
-            return errors.Count == 0;
+
+            if (errors.Count > 0 && runtimeResult == RuntimeResult.Ok)
+                runtimeResult = RuntimeResult.InputError;
+
+            return runtimeResult;
         }
 
         public void RunPrompt()
