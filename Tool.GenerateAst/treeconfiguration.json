@@ -10,10 +10,12 @@
       "visitor": "IExprVisitor",
       "parameterIdentifier": "expr",
       "definitions": [
+        "Assign:token name, expression value",
         "Binary:expression left, token op, expression right",
         "Grouping:expression expression",
         "Literal:literal value",
-        "Unary:token op, expression right"
+        "Unary:token op, expression right",
+        "Variable:token name"
       ]
     },
     "Stmt": {
@@ -21,8 +23,10 @@
       "visitor": "IStmtVisitor",
       "parameterIdentifier": "stmt",
       "definitions": [
+        "Block:statement[] statements",
         "Expression:expression expression",
-        "Print:expression expression"
+        "Print:expression expression",
+        "Var:token name, expression initializer"
       ]
     }
   }

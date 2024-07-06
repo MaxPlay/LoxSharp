@@ -36,7 +36,6 @@ namespace LoxSharp
 
             serviceDescriptors.AddSingleton(configuration);
             serviceDescriptors.AddSingleton<Runtime>();
-            serviceDescriptors.AddSingleton<AstPrinter>();
         }
 
         public int Execute()

@@ -33,13 +33,13 @@ namespace LoxSharp
 
             Scanner scanner = new Scanner(source);
             IReadOnlyList<ILoxToken> tokens = scanner.Tokenize(out List<LoxError> errors);
-            Parser parse = new Parser(tokens);
-            List<IStmt> statements = parse.Parse(out LoxError? parseError);
+            Parser parser = new Parser(tokens);
+            List<IStmt> statements = parser.Parse();
 
-            if (parseError == null)
+            if (parser.Errors.Count == 0)
                 interpreter.Interpret(statements);
             else
-                errors.Add(parseError);
+                errors.AddRange(parser.Errors);
 
             foreach (var error in errors)
             {

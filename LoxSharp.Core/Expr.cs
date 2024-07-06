@@ -7,10 +7,20 @@ namespace LoxSharp.Core
 
     public interface IExprVisitor<T>
     {
+        T Visit(AssignExpr expr);
         T Visit(BinaryExpr expr);
         T Visit(GroupingExpr expr);
         T Visit(LiteralExpr expr);
         T Visit(UnaryExpr expr);
+        T Visit(VariableExpr expr);
+    }
+
+    public class AssignExpr(ILoxToken name, IExpr value) : IExpr
+    {
+        public ILoxToken Name { get; } = name;
+        public IExpr Value { get; } = value;
+
+        public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
     }
 
     public class BinaryExpr(IExpr left, ILoxToken op, IExpr right) : IExpr
@@ -40,6 +50,13 @@ namespace LoxSharp.Core
     {
         public ILoxToken Op { get; } = op;
         public IExpr Right { get; } = right;
+
+        public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
+    }
+
+    public class VariableExpr(ILoxToken name) : IExpr
+    {
+        public ILoxToken Name { get; } = name;
 
         public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
     }

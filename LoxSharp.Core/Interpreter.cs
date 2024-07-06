@@ -7,6 +7,8 @@ namespace LoxSharp.Core
         private readonly TextWriter outWriter = outWriter;
         private readonly TextWriter outError = outError;
 
+        private LoxEnvironment environment = new LoxEnvironment();
+
         public void Interpret(List<IStmt> statements)
         {
             try
@@ -26,10 +28,36 @@ namespace LoxSharp.Core
         }
 
         private void Execute(IStmt stmt) => stmt.Accept(this);
+
+        private void ExecuteBlock(List<IStmt> statements, LoxEnvironment environment)
+        {
+            LoxEnvironment outerEnvironment = this.environment;
+            try
+            {
+                this.environment = environment;
+
+                foreach (IStmt statement in statements)
+                {
+                    Execute(statement);
+                }
+            }
+            finally
+            {
+                this.environment = outerEnvironment;
+            }
+        }
+
         private RuntimeValue Evaluate(IExpr expression) => expression.Accept(this);
 
 
         // - IExprVisitor -
+
+        public RuntimeValue Visit(AssignExpr expr)
+        {
+            RuntimeValue value = Evaluate(expr.Value);
+            environment.Assign(expr.Name, ref value);
+            return value;
+        }
 
         public RuntimeValue Visit(BinaryExpr expr)
         {
@@ -108,6 +136,12 @@ namespace LoxSharp.Core
             };
         }
 
+        public RuntimeValue Visit(VariableExpr expr)
+        {
+            environment.Get(expr.Name, out RuntimeValue value);
+            return value;
+        }
+
         // - IStmtVisitor -
 
         public object? Visit(ExpressionStmt stmt)
@@ -120,6 +154,21 @@ namespace LoxSharp.Core
         {
             RuntimeValue runtimeValue = Evaluate(stmt.Expression);
             outWriter.WriteLine(runtimeValue.StringValue);
+            return null;
+        }
+
+        public object? Visit(VarStmt stmt)
+        {
+            RuntimeValue value = Evaluate(stmt.Initializer);
+
+            environment.Define(stmt.Name.Lexeme, ref value);
+            return null;
+        }
+
+        public object? Visit(BlockStmt stmt)
+        {
+            ExecuteBlock(stmt.Statements, new LoxEnvironment(environment));
+
             return null;
         }
 

@@ -1,1 +1,14 @@
-﻿print "Hello World";
+﻿var a = 10;
+a = "Hello";
+var b = 47;
+b = "World";
+{
+  var a = "outer Hello";
+  var b = "outer World";
+  {
+    var a = "inner Hello";
+    print a + b;
+  }
+  print a + b;
+}
+print a + " " + b + "!";

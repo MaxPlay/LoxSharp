@@ -7,59 +7,86 @@ namespace LoxSharp.Core
         private readonly IReadOnlyList<ILoxToken> tokens = tokens;
         private int current;
 
+        public IReadOnlyList<LoxError> Errors => errors;
+        private readonly List<LoxError> errors = [];
+
         // -- Parser -- //
 
-        public List<IStmt> Parse(out LoxError? error)
+        public List<IStmt> Parse()
         {
-            error = null;
             try
             {
                 List<IStmt> statements = [];
                 while (!IsAtEnd())
                 {
-                    statements.Add(Statement());
+                    IStmt? statement = Declaration();
+                    if (statement != null)
+                        statements.Add(statement);
                 }
                 return statements;
             }
             catch (LoxParseException ex)
             {
-                error = ex.Error;
+                if (ex.Error != null)
+                    errors.Add(ex.Error);
+                else
+                    throw;
                 return [];
             }
+        }
+
+        private IStmt? Declaration()
+        {
+            try
+            {
+                if (Match(TokenType.Var))
+                    return VarDeclaration();
+                return Statement();
+            }
+            catch (LoxParseException ex)
+            {
+                if (ex.Error != null)
+                    errors.Add(ex.Error);
+                else
+                    throw;
+
+                Synchronize();
+                return null;
+            }
+        }
+
+        private VarStmt VarDeclaration()
+        {
+            ILoxToken name = Consume(TokenType.Identifier, "Expected a variable name.");
+
+            IExpr initializer = Match(TokenType.Equal) ? Expression() : new LiteralExpr(new LiteralNilValue());
+            Consume(TokenType.Semicolon, "Expected ';' after variable declaration.");
+
+            return new VarStmt(name, initializer);
         }
 
         private IStmt Statement()
         {
             if (Match(TokenType.Print))
                 return PrintStatement();
+            if (Match(TokenType.LeftBrace))
+                return new BlockStmt(Block());
 
             return ExpressionStatement();
         }
 
-        private void Synchronize()
+        private List<IStmt> Block()
         {
-            Advance();
-
-            while (!IsAtEnd())
+            List<IStmt> statements = [];
+            while (!Check(TokenType.RightBrace) && !IsAtEnd())
             {
-                if (Previous().Type == TokenType.Semicolon)
-                    return;
-
-                switch (Peek().Type)
-                {
-                    case TokenType.Class:
-                    case TokenType.Function:
-                    case TokenType.Var:
-                    case TokenType.For:
-                    case TokenType.If:
-                    case TokenType.While:
-                    case TokenType.Print:
-                    case TokenType.Return:
-                        return;
-                }
+                IStmt? statement = Declaration();
+                if (statement != null)
+                    statements.Add(statement);
             }
 
-            Advance();
+            Consume(TokenType.RightBrace, "Expected '}' after block.");
+            return statements;
         }
 
         private ExpressionStmt ExpressionStatement()
@@ -76,7 +103,28 @@ namespace LoxSharp.Core
             return new PrintStmt(expr);
         }
 
-        private IExpr Expression() => Equality();
+        private IExpr Expression() => Assignment();
+
+        private IExpr Assignment()
+        {
+            IExpr expr = Equality();
+
+            if (Match(TokenType.Equal))
+            {
+                ILoxToken equals = Previous();
+                IExpr value = Assignment();
+
+                if (expr is VariableExpr variableExpression)
+                {
+                    ILoxToken name = variableExpression.Name;
+                    return new AssignExpr(name, value);
+                }
+
+                throw new LoxParseException(equals, "Invalid assignment target.");
+            }
+
+            return expr;
+        }
 
         private IExpr Equality()
         {
@@ -166,6 +214,9 @@ namespace LoxSharp.Core
                 return new LiteralExpr(token.Literal);
             }
 
+            if (Match(TokenType.Identifier))
+                return new VariableExpr(Previous());
+
             if (Match(TokenType.LeftParenthesis))
             {
                 IExpr expr = Expression();
@@ -180,6 +231,32 @@ namespace LoxSharp.Core
         }
 
         // -- Helper -- //
+
+        private void Synchronize()
+        {
+            Advance();
+
+            while (!IsAtEnd())
+            {
+                if (Previous().Type == TokenType.Semicolon)
+                    return;
+
+                switch (Peek().Type)
+                {
+                    case TokenType.Class:
+                    case TokenType.Function:
+                    case TokenType.Var:
+                    case TokenType.For:
+                    case TokenType.If:
+                    case TokenType.While:
+                    case TokenType.Print:
+                    case TokenType.Return:
+                        return;
+                }
+            }
+
+            Advance();
+        }
 
         private bool Match(params TokenType[] tokens)
         {
