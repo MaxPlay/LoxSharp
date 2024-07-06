@@ -4,6 +4,9 @@ namespace LoxSharp.Core
 {
     public abstract class LiteralValue
     {
+        public static implicit operator LiteralValue(bool value) => new LiteralBoolValue(value);
+        public static implicit operator LiteralValue(double value) => new LiteralNumericValue(value);
+        public static implicit operator LiteralValue(string value) => new LiteralStringValue(value);
     }
 
     public class LiteralBoolValue(bool value) : LiteralValue

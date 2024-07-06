@@ -2,8 +2,39 @@
 
 namespace LoxSharp.Core
 {
-    public class Interpreter : IVisitor<RuntimeValue>
+    public class Interpreter : IExprVisitor<RuntimeValue>, IStmtVisitor<object?>
     {
+        private readonly TextWriter outWriter;
+        private readonly TextWriter outError;
+
+        public Interpreter(TextWriter outWriter, TextWriter outError)
+        {
+            this.outWriter = outWriter;
+            this.outError = outError;
+        }
+
+        public void Interpret(List<IStmt> statements)
+        {
+            try
+            {
+                foreach (var stmt in statements)
+                {
+                    Execute(stmt);
+                }
+            }
+            catch (LoxRuntimeException ex)
+            {
+                if (ex.Error != null)
+                    outError.WriteLine($"Error: [{ex.Error.Line}] Error{ex.Error.Where}: {ex.Error.Message}");
+                else
+                    outError.WriteLine(ex);
+            }
+        }
+
+        private void Execute(IStmt stmt) => stmt.Accept(this);
+
+        // - IExprVisitor -
+
         public RuntimeValue Visit(BinaryExpr expr)
         {
             RuntimeValue left = Evaluate(expr.Left);
@@ -81,6 +112,23 @@ namespace LoxSharp.Core
             };
         }
 
+        // - IStmtVisitor -
+
+        public object? Visit(ExpressionStmt stmt)
+        {
+            Evaluate(stmt.Expression);
+            return null;
+        }
+
+        public object? Visit(PrintStmt stmt)
+        {
+            RuntimeValue runtimeValue = Evaluate(stmt.Expression);
+            outWriter.WriteLine(runtimeValue.StringValue);
+            return null;
+        }
+
+        // - Helpers -
+
         private RuntimeValue Evaluate(IExpr expression) => expression.Accept(this);
         private static bool IsEqual(RuntimeValue left, RuntimeValue right)
         {
@@ -108,20 +156,6 @@ namespace LoxSharp.Core
         {
             if (right.Type != RuntimeValueType.Numeric || left.Type != RuntimeValueType.Numeric)
                 throw new LoxRuntimeException(op, "Operands must be a numbers.");
-        }
-
-        public string Interpret(IExpr expression, out LoxError? error)
-        {
-            error = null;
-            try
-            {
-                return Evaluate(expression).ToString();
-            }
-            catch (LoxRuntimeException ex)
-            {
-                error = ex.Error;
-                return string.Empty;
-            }
         }
     }
 }

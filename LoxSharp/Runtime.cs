@@ -10,10 +10,10 @@ namespace LoxSharp
         RuntimeError
     }
 
-    public class Runtime(ILogger<Runtime> logger, Interpreter interpreter)
+    public class Runtime(ILogger<Runtime> logger)
     {
         private readonly ILogger logger = logger;
-        private readonly Interpreter interpreter = interpreter;
+        private readonly Interpreter interpreter = new Interpreter(Console.Out, Console.Error);
 
         public RuntimeResult RunFile(string path)
         {
@@ -34,26 +34,10 @@ namespace LoxSharp
             Scanner scanner = new Scanner(source);
             IReadOnlyList<ILoxToken> tokens = scanner.Tokenize(out List<LoxError> errors);
             Parser parse = new Parser(tokens);
-            IExpr? expression = parse.Parse(out LoxError? parseError);
+            List<IStmt> statements = parse.Parse(out LoxError? parseError);
 
             if (parseError == null)
-            {
-                if (expression != null)
-                {
-                    string result = interpreter.Interpret(expression, out LoxError? runtimeError);
-                    if (runtimeError == null)
-                    {
-                        logger.LogInformation("{result}", result);
-                    }
-                    else
-                    {
-                        runtimeResult = RuntimeResult.RuntimeError;
-                        errors.Add(runtimeError);
-                    }
-                }
-                else
-                    throw new Exception("Parsing failed without error.");
-            }
+                interpreter.Interpret(statements);
             else
                 errors.Add(parseError);
 

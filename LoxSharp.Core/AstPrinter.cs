@@ -2,7 +2,7 @@
 
 namespace LoxSharp.Core
 {
-    public class AstPrinter : IVisitor<string>
+    public class AstPrinter : IExprVisitor<string>
     {
         private string Parenthesise(string name, params IExpr[] expressions)
         {

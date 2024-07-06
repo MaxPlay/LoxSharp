@@ -1,4 +1,6 @@
-﻿namespace LoxSharp.Core
+﻿using System.Data;
+
+namespace LoxSharp.Core
 {
     public class Parser(IReadOnlyList<ILoxToken> tokens)
     {
@@ -7,18 +9,31 @@
 
         // -- Parser -- //
 
-        public IExpr? Parse(out LoxError? error)
+        public List<IStmt> Parse(out LoxError? error)
         {
             error = null;
             try
             {
-                return Expression();
+                List<IStmt> statements = [];
+                while (!IsAtEnd())
+                {
+                    statements.Add(Statement());
+                }
+                return statements;
             }
             catch (LoxParseException ex)
             {
                 error = ex.Error;
-                return null;
+                return [];
             }
+        }
+
+        private IStmt Statement()
+        {
+            if (Match(TokenType.Print))
+                return PrintStatement();
+
+            return ExpressionStatement();
         }
 
         private void Synchronize()
@@ -45,6 +60,20 @@
             }
 
             Advance();
+        }
+
+        private IStmt ExpressionStatement()
+        {
+            IExpr expr = Expression();
+            Consume(TokenType.Semicolon, "Expect ';' after value.");
+            return new ExpressionStmt(expr);
+        }
+
+        private IStmt PrintStatement()
+        {
+            IExpr expr = Expression();
+            Consume(TokenType.Semicolon, "Expect ';' after expression.");
+            return new PrintStmt(expr);
         }
 
         private IExpr Expression() => Equality();
@@ -121,7 +150,7 @@
             if (Match(TokenType.True))
                 return new LiteralExpr(true);
             if (Match(TokenType.Nil))
-                return new LiteralExpr();
+                return new LiteralExpr(new LiteralNilValue());
 
             if (Match(TokenType.Number))
             {
