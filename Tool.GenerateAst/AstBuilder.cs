@@ -1,7 +1,4 @@
-﻿
-using Microsoft.Extensions.Logging;
-using System.Diagnostics.CodeAnalysis;
-using System.Security.Cryptography.X509Certificates;
+﻿using Microsoft.Extensions.Logging;
 using System.Text;
 
 namespace Tool.GenerateAst
@@ -19,14 +16,24 @@ namespace Tool.GenerateAst
         private class AstMember
         {
             public string Name { get; set; } = string.Empty;
+            public bool IsCollection { get; set; } = false;
             public string Type { get; set; } = string.Empty;
 
-            public override string ToString() => $"{Type} {Name}";
+            public override string ToString()
+            {
+                if (IsCollection)
+                    return $"List<{Type}> {Name}";
+                return $"{Type} {Name}";
+            }
 
             public string ToPropertyString()
             {
                 StringBuilder builder = new StringBuilder();
+                if (IsCollection)
+                    builder.Append("List<");
                 builder.Append(Type);
+                if (IsCollection)
+                    builder.Append('>');
                 builder.Append(' ');
                 if (Name.Length > 0)
                     builder.Append(char.ToUpperInvariant(Name[0]));
@@ -135,9 +142,10 @@ namespace Tool.GenerateAst
                         logger.LogError("Member definition is invalid and will be skipped: {member}", member);
                         continue;
                     }
-                    string memberType = GetRealTypeIdentifier(memberDef[0]);
+                    bool isCollection = memberDef[0].EndsWith("[]");
+                    string memberType = GetRealTypeIdentifier(isCollection ? memberDef[0][..^2] : memberDef[0]);
 
-                    type.Members.Add(new AstMember { Name = memberDef[1], Type = memberType });
+                    type.Members.Add(new AstMember { Name = memberDef[1], Type = memberType, IsCollection = isCollection });
                 }
 
                 domain.Types.Add(type);
