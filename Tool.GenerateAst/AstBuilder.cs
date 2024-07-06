@@ -106,6 +106,7 @@ namespace Tool.GenerateAst
                 {
                     Visitor = domainConfiguration.Visitor,
                     Interface = GetRealTypeIdentifier(domainConfiguration.Interface),
+                    ParameterIdentifier = domainConfiguration.ParameterIdentifier,
                 };
                 domains.Add(domainIdentifier, domain);
             }
