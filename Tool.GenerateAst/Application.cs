@@ -61,8 +61,8 @@ namespace Tool.GenerateAst
                     break;
 
                 default:
-                    logger.LogError("usage: Tool.GenerateAst <File>");
-                    logger.LogError("       <File> File to create with code for the tree");
+                    logger.LogError("usage: Tool.GenerateAst <Directory>");
+                    logger.LogError("       <Directory> Directory to create the code for the tree in");
                     return 64;
             }
             return 0;

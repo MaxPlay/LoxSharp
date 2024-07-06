@@ -1,13 +1,29 @@
 ﻿{
   "namespace": "LoxSharp.Core",
-  "visitor": "IVisitor",
   "expression": "IExpr",
+  "statement": "IStmt",
   "token": "ILoxToken",
   "literal": "LiteralValue",
-  "definitions": [
-    "Binary:expression left, token op, expression right",
-    "Grouping:expression expression",
-    "Literal:literal value",
-    "Unary:token op, expression right"
-  ]
+  "domains": {
+    "Expr": {
+      "interface": "expression",
+      "visitor": "IExprVisitor",
+      "parameterIdentifier": "expr",
+      "definitions": [
+        "Binary:expression left, token op, expression right",
+        "Grouping:expression expression",
+        "Literal:literal value",
+        "Unary:token op, expression right"
+      ]
+    },
+    "Stmt": {
+      "interface": "statement",
+      "visitor": "IStmtVisitor",
+      "parameterIdentifier": "stmt",
+      "definitions": [
+        "Expression:expression expression",
+        "Print:expression expression"
+      ]
+    }
+  }
 }
