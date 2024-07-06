@@ -62,14 +62,14 @@ namespace LoxSharp.Core
             Advance();
         }
 
-        private IStmt ExpressionStatement()
+        private ExpressionStmt ExpressionStatement()
         {
             IExpr expr = Expression();
             Consume(TokenType.Semicolon, "Expect ';' after value.");
             return new ExpressionStmt(expr);
         }
 
-        private IStmt PrintStatement()
+        private PrintStmt PrintStatement()
         {
             IExpr expr = Expression();
             Consume(TokenType.Semicolon, "Expect ';' after expression.");

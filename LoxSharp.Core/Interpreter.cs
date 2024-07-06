@@ -2,16 +2,10 @@
 
 namespace LoxSharp.Core
 {
-    public class Interpreter : IExprVisitor<RuntimeValue>, IStmtVisitor<object?>
+    public class Interpreter(TextWriter outWriter, TextWriter outError) : IExprVisitor<RuntimeValue>, IStmtVisitor<object?>
     {
-        private readonly TextWriter outWriter;
-        private readonly TextWriter outError;
-
-        public Interpreter(TextWriter outWriter, TextWriter outError)
-        {
-            this.outWriter = outWriter;
-            this.outError = outError;
-        }
+        private readonly TextWriter outWriter = outWriter;
+        private readonly TextWriter outError = outError;
 
         public void Interpret(List<IStmt> statements)
         {
@@ -32,6 +26,8 @@ namespace LoxSharp.Core
         }
 
         private void Execute(IStmt stmt) => stmt.Accept(this);
+        private RuntimeValue Evaluate(IExpr expression) => expression.Accept(this);
+
 
         // - IExprVisitor -
 
@@ -129,7 +125,6 @@ namespace LoxSharp.Core
 
         // - Helpers -
 
-        private RuntimeValue Evaluate(IExpr expression) => expression.Accept(this);
         private static bool IsEqual(RuntimeValue left, RuntimeValue right)
         {
             if (left.IsNil)
