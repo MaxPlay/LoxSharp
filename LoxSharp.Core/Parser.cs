@@ -186,7 +186,7 @@ namespace LoxSharp.Core
                     return new AssignExpr(name, value);
                 }
 
-                throw new LoxParseException(equals, "Invalid assignment target.");
+                errors.Add(new LoxError(equals, "Invalid assignment target."));
             }
 
             return expr;

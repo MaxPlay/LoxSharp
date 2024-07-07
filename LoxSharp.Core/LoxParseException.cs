@@ -18,9 +18,7 @@
         {
             Token = token;
 
-            Error = token.Type == TokenType.Eof
-                ? new LoxError(token.Line, " at end", message)
-                : new LoxError(token.Line, " at '" + token.Lexeme + "'", message);
+            Error = new LoxError(token, message);
         }
 
         protected LoxParseException(string? message, Exception? innerException) : base(message, innerException)
