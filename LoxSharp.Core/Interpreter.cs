@@ -1,6 +1,4 @@
-﻿
-
-namespace LoxSharp.Core
+﻿namespace LoxSharp.Core
 {
     public class Interpreter(TextWriter outWriter, TextWriter outError) : IExprVisitor<RuntimeValue>, IStmtVisitor<object?>
     {
@@ -142,6 +140,24 @@ namespace LoxSharp.Core
             return value;
         }
 
+        public RuntimeValue Visit(LogicalExpr expr)
+        {
+            RuntimeValue left = Evaluate(expr.Left);
+
+            if (expr.Op.Type == TokenType.Or)
+            {
+                if (left.BoolValue)
+                    return left;
+            }
+            else
+            {
+                if (!left.BoolValue)
+                    return left;
+            }
+
+            return Evaluate(expr.Right);
+        }
+
         // - IStmtVisitor -
 
         public object? Visit(ExpressionStmt stmt)
@@ -169,6 +185,25 @@ namespace LoxSharp.Core
         {
             ExecuteBlock(stmt.Statements, new LoxEnvironment(environment));
 
+            return null;
+        }
+
+        public object? Visit(IfStmt stmt)
+        {
+            if (Evaluate(stmt.Condition).BoolValue)
+                Execute(stmt.ThenBranch);
+            else if (stmt.ElseBranch != null)
+                Execute(stmt.ElseBranch);
+
+            return null;
+        }
+
+        public object? Visit(WhileStmt stmt)
+        {
+            while (Evaluate(stmt.Condition).BoolValue)
+            {
+                Execute(stmt.Body);
+            }
             return null;
         }
 

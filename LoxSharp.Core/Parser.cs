@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using Microsoft.VisualBasic;
+using System.Data;
 
 namespace LoxSharp.Core
 {
@@ -67,12 +68,77 @@ namespace LoxSharp.Core
 
         private IStmt Statement()
         {
+            if (Match(TokenType.For))
+                return For();
+            if (Match(TokenType.If))
+                return If();
             if (Match(TokenType.Print))
-                return PrintStatement();
+                return Print();
+            if (Match(TokenType.While))
+                return While();
             if (Match(TokenType.LeftBrace))
                 return new BlockStmt(Block());
 
             return ExpressionStatement();
+        }
+
+        private IStmt For()
+        {
+            Consume(TokenType.LeftParenthesis, "Expected '(' after 'for'.");
+            IStmt? initializer;
+            if (Match(TokenType.Semicolon))
+                initializer = null;
+            else if (Match(TokenType.Var))
+                initializer = VarDeclaration();
+            else
+                initializer = ExpressionStatement();
+
+            IExpr? condition = null;
+            if (!Check(TokenType.Semicolon))
+                condition = Expression();
+            Consume(TokenType.Semicolon, "Expected ';' after loop condition.");
+
+            IExpr? increment = null;
+            if (!Check(TokenType.RightParenthesis))
+                increment = Expression();
+            Consume(TokenType.RightParenthesis, "Expected ')' after for clauses.");
+
+            IStmt body = Statement();
+
+            if (increment != null)
+                body = new BlockStmt([body, new ExpressionStmt(increment)]);
+
+            condition ??= new LiteralExpr(true);
+
+            body = new WhileStmt(condition, body);
+
+            if (initializer != null)
+                body = new BlockStmt([initializer, body]);
+
+            return body;
+        }
+
+        private WhileStmt While()
+        {
+            Consume(TokenType.LeftParenthesis, "Expected '(' after 'while'.");
+            IExpr condition = Expression();
+            Consume(TokenType.RightParenthesis, "Expected ')' after condition.");
+            IStmt body = Statement();
+
+            return new WhileStmt(condition, body);
+        }
+
+        private IfStmt If()
+        {
+            Consume(TokenType.LeftParenthesis, "Expected '(' after 'if'.");
+            IExpr condition = Expression();
+            Consume(TokenType.RightParenthesis, "Expected ')' after condition.");
+
+            IStmt thenBranch = Statement();
+            IStmt? elseBranch = null;
+            if (Match(TokenType.Else))
+                elseBranch = Statement();
+            return new IfStmt(condition, thenBranch, elseBranch);
         }
 
         private List<IStmt> Block()
@@ -96,7 +162,7 @@ namespace LoxSharp.Core
             return new ExpressionStmt(expr);
         }
 
-        private PrintStmt PrintStatement()
+        private PrintStmt Print()
         {
             IExpr expr = Expression();
             Consume(TokenType.Semicolon, "Expect ';' after expression.");
@@ -107,7 +173,7 @@ namespace LoxSharp.Core
 
         private IExpr Assignment()
         {
-            IExpr expr = Equality();
+            IExpr expr = Or();
 
             if (Match(TokenType.Equal))
             {
@@ -121,6 +187,34 @@ namespace LoxSharp.Core
                 }
 
                 throw new LoxParseException(equals, "Invalid assignment target.");
+            }
+
+            return expr;
+        }
+
+        private IExpr Or()
+        {
+            IExpr expr = And();
+
+            while (Match(TokenType.Or))
+            {
+                ILoxToken op = Previous();
+                IExpr right = And();
+                expr = new LogicalExpr(expr, op, right);
+            }
+
+            return expr;
+        }
+
+        private IExpr And()
+        {
+            IExpr expr = Equality();
+
+            while (Match(TokenType.And))
+            {
+                ILoxToken op = Previous();
+                IExpr right = Equality();
+                expr = new LogicalExpr(expr, op, right);
             }
 
             return expr;
