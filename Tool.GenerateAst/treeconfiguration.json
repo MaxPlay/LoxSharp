@@ -25,6 +25,7 @@
       "definitions": [
         "Block:statement[] statements",
         "Expression:expression expression",
+        "If:expression condition, statement thenBranch, statement? elseBranch",
         "Print:expression expression",
         "Var:token name, expression initializer"
       ]

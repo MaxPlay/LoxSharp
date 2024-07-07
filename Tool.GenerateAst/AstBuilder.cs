@@ -17,29 +17,39 @@ namespace Tool.GenerateAst
         {
             public string Name { get; set; } = string.Empty;
             public bool IsCollection { get; set; } = false;
+            public bool IsNullable { get; set; }
             public string Type { get; set; } = string.Empty;
 
             public override string ToString()
             {
+                StringBuilder sb = new StringBuilder();
                 if (IsCollection)
-                    return $"List<{Type}> {Name}";
-                return $"{Type} {Name}";
+                    sb.Append("List<");
+                sb.Append(Type);
+                if (IsCollection)
+                    sb.Append('>');
+                if (IsNullable)
+                    sb.Append('?');
+                sb.Append(' ').Append(Name);
+                return sb.ToString();
             }
 
             public string ToPropertyString()
             {
-                StringBuilder builder = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
                 if (IsCollection)
-                    builder.Append("List<");
-                builder.Append(Type);
+                    sb.Append("List<");
+                sb.Append(Type);
                 if (IsCollection)
-                    builder.Append('>');
-                builder.Append(' ');
+                    sb.Append('>');
+                if (IsNullable)
+                    sb.Append('?');
+                sb.Append(' ');
                 if (Name.Length > 0)
-                    builder.Append(char.ToUpperInvariant(Name[0]));
+                    sb.Append(char.ToUpperInvariant(Name[0]));
                 if (Name.Length > 1)
-                    builder.Append(Name[1..]);
-                return builder.ToString();
+                    sb.Append(Name[1..]);
+                return sb.ToString();
             }
         }
 
@@ -142,10 +152,16 @@ namespace Tool.GenerateAst
                         logger.LogError("Member definition is invalid and will be skipped: {member}", member);
                         continue;
                     }
-                    bool isCollection = memberDef[0].EndsWith("[]");
-                    string memberType = GetRealTypeIdentifier(isCollection ? memberDef[0][..^2] : memberDef[0]);
+                    string typeIdentifier = memberDef[0];
+                    bool isNullable = typeIdentifier.EndsWith('?');
+                    if (isNullable)
+                        typeIdentifier = typeIdentifier[..^1];
+                    bool isCollection = typeIdentifier.EndsWith("[]", StringComparison.InvariantCultureIgnoreCase);
+                    if (isCollection)
+                        typeIdentifier = typeIdentifier[..^2];
+                    string memberType = GetRealTypeIdentifier(typeIdentifier);
 
-                    type.Members.Add(new AstMember { Name = memberDef[1], Type = memberType, IsCollection = isCollection });
+                    type.Members.Add(new AstMember { Name = memberDef[1], Type = memberType, IsCollection = isCollection, IsNullable = isNullable });
                 }
 
                 domain.Types.Add(type);
