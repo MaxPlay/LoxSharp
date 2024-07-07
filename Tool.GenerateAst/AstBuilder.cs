@@ -169,15 +169,10 @@ namespace Tool.GenerateAst
 
             string GetRealTypeIdentifier(string placeholder)
             {
-                return placeholder switch
-                {
-                    "expression" => configuration.Expression,
-                    "statement" => configuration.Statement,
-                    "token" => configuration.Token,
-                    "visitor" => domainConfiguration.Visitor,
-                    "literal" => configuration.Literal,
-                    _ => throw new Exception("Invalid memberType.")
-                };
+                if (configuration.Placeholders.TryGetValue(placeholder, out var type))
+                    return type;
+
+                throw new Exception("Invalid memberType.");
             }
         }
 

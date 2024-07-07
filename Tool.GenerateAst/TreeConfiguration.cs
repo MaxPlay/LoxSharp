@@ -3,10 +3,7 @@
     public class TreeConfiguration
     {
         public string Namespace { get; set; } = string.Empty;
-        public string Expression { get; set; } = string.Empty;
-        public string Statement { get; set; } = string.Empty;
-        public string Token { get; set; } = string.Empty;
-        public string Literal { get; set; } = string.Empty;
+        public Dictionary<string, string> Placeholders { get; set; } = [];
         public Dictionary<string, TreeConfigurationDomain> Domains { get; set; } = [];
     }
 

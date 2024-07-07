@@ -1,9 +1,11 @@
 ﻿{
   "namespace": "LoxSharp.Core",
-  "expression": "IExpr",
-  "statement": "IStmt",
-  "token": "ILoxToken",
-  "literal": "LiteralValue",
+  "placeholders": {
+    "expression": "IExpr",
+    "statement": "IStmt",
+    "token": "ILoxToken",
+    "literal": "LiteralValue"
+  },
   "domains": {
     "Expr": {
       "interface": "expression",
@@ -14,6 +16,7 @@
         "Binary:expression left, token op, expression right",
         "Grouping:expression expression",
         "Literal:literal value",
+        "Logical:expression left, token op, expression right",
         "Unary:token op, expression right",
         "Variable:token name"
       ]
@@ -27,7 +30,8 @@
         "Expression:expression expression",
         "If:expression condition, statement thenBranch, statement? elseBranch",
         "Print:expression expression",
-        "Var:token name, expression initializer"
+        "Var:token name, expression initializer",
+        "While:expression condition, statement body"
       ]
     }
   }
