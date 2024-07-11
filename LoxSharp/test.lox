@@ -1,18 +1,1 @@
-﻿var a = 10;
-a = "Hello";
-var b = 47;
-b = "World";
-{
-  var a = "outer Hello";
-  var b = "outer World";
-  {
-    var a = "inner Hello";
-    print a + b;
-  }
-  print a + b;
-}
-
-for (var i = 0; i < 10; i = i + 1)
-    print i;
-
-print a + " " + b + "!";
+﻿print platypus();

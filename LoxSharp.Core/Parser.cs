@@ -5,6 +5,7 @@ namespace LoxSharp.Core
 {
     public class Parser(IReadOnlyList<ILoxToken> tokens)
     {
+        private const int MAX_FUNCTION_PARAMETERS = 255;
         private readonly IReadOnlyList<ILoxToken> tokens = tokens;
         private int current;
 
@@ -282,7 +283,40 @@ namespace LoxSharp.Core
                 return new UnaryExpr(op, right);
             }
 
-            return Primary();
+            return Call();
+        }
+
+        private IExpr Call()
+        {
+            IExpr expr = Primary();
+
+            while (true)
+            {
+                if (Match(TokenType.LeftParenthesis))
+                    expr = FinishCall(expr);
+                else
+                    break;
+            }
+
+            return expr;
+        }
+
+        private CallExpr FinishCall(IExpr callee)
+        {
+            List<IExpr> arguments = [];
+            if (!Check(TokenType.RightParenthesis))
+            {
+                do
+                {
+                    if (arguments.Count >= MAX_FUNCTION_PARAMETERS)
+                        errors.Add(new LoxError(Peek(), $"Can't have more than {MAX_FUNCTION_PARAMETERS} arguments."));
+                    arguments.Add(Expression());
+                } while (Match(TokenType.Comma));
+            }
+
+            ILoxToken parent = Consume(TokenType.RightParenthesis, "Expected ')' after arguments.");
+
+            return new CallExpr(callee, parent, arguments.Count > 0 ? arguments : null);
         }
 
         private IExpr Primary()

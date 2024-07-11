@@ -21,6 +21,11 @@ namespace LoxSharp.Core
             this.enclosing = enclosing;
         }
 
+        public void Define(string name, ILoxCallable value)
+        {
+            values[name] = RuntimeValue.MakeFunctionPointer(value);
+        }
+
         public void Define(string name, ref RuntimeValue value)
         {
             values[name] = value;

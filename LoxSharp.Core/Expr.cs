@@ -9,6 +9,7 @@ namespace LoxSharp.Core
     {
         T Visit(AssignExpr expr);
         T Visit(BinaryExpr expr);
+        T Visit(CallExpr expr);
         T Visit(GroupingExpr expr);
         T Visit(LiteralExpr expr);
         T Visit(LogicalExpr expr);
@@ -29,6 +30,15 @@ namespace LoxSharp.Core
         public IExpr Left { get; } = left;
         public ILoxToken Op { get; } = op;
         public IExpr Right { get; } = right;
+
+        public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
+    }
+
+    public class CallExpr(IExpr callee, ILoxToken parent, List<IExpr>? arguments) : IExpr
+    {
+        public IExpr Callee { get; } = callee;
+        public ILoxToken Parent { get; } = parent;
+        public List<IExpr>? Arguments { get; } = arguments;
 
         public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
     }

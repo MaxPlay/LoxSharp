@@ -1,11 +1,22 @@
 ﻿namespace LoxSharp.Core
 {
-    public class Interpreter(TextWriter outWriter, TextWriter outError) : IExprVisitor<RuntimeValue>, IStmtVisitor<object?>
+    public class Interpreter : IExprVisitor<RuntimeValue>, IStmtVisitor<object?>
     {
-        private readonly TextWriter outWriter = outWriter;
-        private readonly TextWriter outError = outError;
+        private readonly TextWriter outWriter;
+        private readonly TextWriter outError;
 
-        private LoxEnvironment environment = new LoxEnvironment();
+        private readonly LoxEnvironment globals = new LoxEnvironment();
+        private LoxEnvironment environment;
+
+        public Interpreter(TextWriter outWriter, TextWriter outError)
+        {
+            this.outWriter = outWriter;
+            this.outError = outError;
+            environment = globals;
+
+            globals.Define("clock", LoxCallable.MakeNative(() => Math.Floor((DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds)));
+            globals.Define("platypus", LoxCallable.MakeNative(() => "Help, I'm trapped in a platypus factory!"));
+        }
 
         public void Interpret(List<IStmt> statements)
         {
@@ -158,6 +169,30 @@
             return Evaluate(expr.Right);
         }
 
+        public RuntimeValue Visit(CallExpr expr)
+        {
+            RuntimeValue callee = Evaluate(expr.Callee);
+
+            List<RuntimeValue>? arguments = null;
+            if (expr.Arguments != null)
+            {
+                arguments = [];
+                foreach (IExpr arg in expr.Arguments)
+                {
+                    arguments.Add(Evaluate(arg));
+                }
+            }
+
+            if (callee.Type != RuntimeValueType.Function || callee.FunctionValue == null)
+                throw new LoxRuntimeException(expr.Parent, "Can only call functions and classes.");
+            ILoxCallable function = callee.FunctionValue;
+            int argumentCount = arguments?.Count ?? 0;
+            if (argumentCount != function.Arity)
+                throw new LoxRuntimeException(expr.Parent, $"Expected {function.Arity} arguments but got {argumentCount}.");
+
+            return function.Call(this, arguments);
+        }
+
         // - IStmtVisitor -
 
         public object? Visit(ExpressionStmt stmt)
@@ -231,6 +266,7 @@
             if (operand.Type != RuntimeValueType.Numeric)
                 throw new LoxRuntimeException(op, "Operand must be a number.");
         }
+
         private static void CheckNumberOperand(ILoxToken op, ref RuntimeValue right, ref RuntimeValue left)
         {
             if (right.Type != RuntimeValueType.Numeric || left.Type != RuntimeValueType.Numeric)
