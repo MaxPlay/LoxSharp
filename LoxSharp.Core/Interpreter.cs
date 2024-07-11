@@ -14,8 +14,8 @@
             this.outError = outError;
             environment = globals;
 
-            globals.Define("clock", LoxCallable.MakeNative(() => Math.Floor((DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds)));
-            globals.Define("platypus", LoxCallable.MakeNative(() => "Help, I'm trapped in a platypus factory!"));
+            globals.Define(NativeLoxCallable.Make("clock", () => Math.Floor((DateTime.UtcNow - DateTime.UnixEpoch).TotalSeconds)));
+            globals.Define(NativeLoxCallable.Make("platypus", (count) => $"{count.NumericValue} little platypus!"));
         }
 
         public void Interpret(List<IStmt> statements)

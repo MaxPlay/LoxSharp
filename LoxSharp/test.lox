@@ -1,1 +1,2 @@
-﻿print platypus();
+﻿for (var i = 1; i <= 10; i = i + 1)
+	print platypus(i);
