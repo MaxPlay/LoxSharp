@@ -9,6 +9,7 @@ namespace LoxSharp.Core
     {
         T Visit(BlockStmt stmt);
         T Visit(ExpressionStmt stmt);
+        T Visit(FunctionStmt stmt);
         T Visit(IfStmt stmt);
         T Visit(PrintStmt stmt);
         T Visit(VarStmt stmt);
@@ -25,6 +26,15 @@ namespace LoxSharp.Core
     public class ExpressionStmt(IExpr expression) : IStmt
     {
         public IExpr Expression { get; } = expression;
+
+        public T Accept<T>(IStmtVisitor<T> visitor) => visitor.Visit(this);
+    }
+
+    public class FunctionStmt(ILoxToken name, List<ILoxToken> parameters, List<IStmt> body) : IStmt
+    {
+        public ILoxToken Name { get; } = name;
+        public List<ILoxToken> Parameters { get; } = parameters;
+        public List<IStmt> Body { get; } = body;
 
         public T Accept<T>(IStmtVisitor<T> visitor) => visitor.Visit(this);
     }

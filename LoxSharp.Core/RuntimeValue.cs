@@ -49,6 +49,7 @@ namespace LoxSharp.Core
             RuntimeValueType.Nil => "Nil",
             RuntimeValueType.Numeric => numericValue.ToString(),
             RuntimeValueType.Boolean => boolValue.ToString(),
+            RuntimeValueType.Function => functionValue?.ToString() ?? string.Empty,
             _ => string.Empty
         };
 

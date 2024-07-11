@@ -5,6 +5,11 @@ namespace LoxSharp.Core
 {
     public class Parser(IReadOnlyList<ILoxToken> tokens)
     {
+        enum FunctionType
+        {
+            Function
+        }
+
         private const int MAX_FUNCTION_PARAMETERS = 255;
         private readonly IReadOnlyList<ILoxToken> tokens = tokens;
         private int current;
@@ -41,6 +46,8 @@ namespace LoxSharp.Core
         {
             try
             {
+                if (Match(TokenType.Function))
+                    return FunctionDeclaration(FunctionType.Function);
                 if (Match(TokenType.Var))
                     return VarDeclaration();
                 return Statement();
@@ -55,6 +62,28 @@ namespace LoxSharp.Core
                 Synchronize();
                 return null;
             }
+        }
+
+        private FunctionStmt FunctionDeclaration(FunctionType type)
+        {
+            ILoxToken token = Consume(TokenType.Identifier, $"Expected {type} name.");
+            Consume(TokenType.LeftParenthesis, $"Expected '(' after {type} name.");
+            List<ILoxToken> parameters = [];
+            if (!Check(TokenType.RightParenthesis))
+            {
+                do
+                {
+                    if (parameters.Count >= MAX_FUNCTION_PARAMETERS)
+                        AddError($"Can't have more than {MAX_FUNCTION_PARAMETERS} parameters.");
+
+                    parameters.Add(Consume(TokenType.Identifier, "Expected parameter name."));
+                } while (Match(TokenType.Comma));
+            }
+
+            Consume(TokenType.RightParenthesis, "Expected ')' after parameters.");
+            Consume(TokenType.LeftBrace, "Expected '{' after parameters.");
+            List<IStmt> body = Block();
+            return new FunctionStmt(token, parameters, body);
         }
 
         private VarStmt VarDeclaration()
@@ -187,7 +216,7 @@ namespace LoxSharp.Core
                     return new AssignExpr(name, value);
                 }
 
-                errors.Add(new LoxError(equals, "Invalid assignment target."));
+                AddError(equals, "Invalid assignment target.");
             }
 
             return expr;
@@ -309,7 +338,7 @@ namespace LoxSharp.Core
                 do
                 {
                     if (arguments.Count >= MAX_FUNCTION_PARAMETERS)
-                        errors.Add(new LoxError(Peek(), $"Can't have more than {MAX_FUNCTION_PARAMETERS} arguments."));
+                        AddError($"Can't have more than {MAX_FUNCTION_PARAMETERS} arguments.");
                     arguments.Add(Expression());
                 } while (Match(TokenType.Comma));
             }
@@ -421,5 +450,9 @@ namespace LoxSharp.Core
 
             throw new LoxParseException(Peek(), message);
         }
+
+        private void AddError(string message) => AddError(Peek(), message);
+
+        private void AddError(ILoxToken token, string message) => errors.Add(new LoxError(token, message));
     }
 }

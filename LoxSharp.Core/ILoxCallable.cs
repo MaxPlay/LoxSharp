@@ -17,7 +17,7 @@
         public static ILoxCallable Make(string identifier, Func<RuntimeValue, RuntimeValue> func) => new NativeLoxCallable_Param1(identifier, func);
 
         public abstract RuntimeValue Call(Interpreter interpreter, List<RuntimeValue>? arguments);
-        public override string ToString() => $"<fn {Identifier}>";
+        public override string ToString() => $"<native fn {Identifier}>";
     }
 
     public class NativeLoxCallable_Param0(string identifier, Func<RuntimeValue> func) : NativeLoxCallable

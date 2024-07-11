@@ -1,2 +1,10 @@
-﻿for (var i = 1; i <= 10; i = i + 1)
-	print platypus(i);
+﻿fun count(n) {
+  if (n > 1)
+    count(n - 1);
+  print platypus(n);
+}
+
+print count;
+print platypus;
+
+count(3);

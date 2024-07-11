@@ -5,6 +5,8 @@
         private readonly TextWriter outWriter;
         private readonly TextWriter outError;
 
+        public LoxEnvironment Globals => globals;
+        public LoxEnvironment Environment => environment;
         private readonly LoxEnvironment globals = new LoxEnvironment();
         private LoxEnvironment environment;
 
@@ -38,7 +40,7 @@
 
         private void Execute(IStmt stmt) => stmt.Accept(this);
 
-        private void ExecuteBlock(List<IStmt> statements, LoxEnvironment environment)
+        public void ExecuteBlock(List<IStmt> statements, LoxEnvironment environment)
         {
             LoxEnvironment outerEnvironment = this.environment;
             try
@@ -55,9 +57,6 @@
                 this.environment = outerEnvironment;
             }
         }
-
-        private RuntimeValue Evaluate(IExpr expression) => expression.Accept(this);
-
 
         // - IExprVisitor -
 
@@ -242,7 +241,16 @@
             return null;
         }
 
+        public object? Visit(FunctionStmt stmt)
+        {
+            LoxFunction function = new LoxFunction(stmt);
+            environment.Define(function);
+            return null;
+        }
+
         // - Helpers -
+
+        private RuntimeValue Evaluate(IExpr expression) => expression.Accept(this);
 
         private static bool IsEqual(RuntimeValue left, RuntimeValue right)
         {
