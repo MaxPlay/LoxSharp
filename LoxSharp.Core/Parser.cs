@@ -104,12 +104,25 @@ namespace LoxSharp.Core
                 return If();
             if (Match(TokenType.Print))
                 return Print();
+            if (Match(TokenType.Return))
+                return Return();
             if (Match(TokenType.While))
                 return While();
             if (Match(TokenType.LeftBrace))
                 return new BlockStmt(Block());
 
             return ExpressionStatement();
+        }
+
+        private ReturnStmt Return()
+        {
+            ILoxToken keyword = Previous();
+            IExpr? value = null;
+            if (!Check(TokenType.Semicolon))
+                value = Expression();
+
+            Consume(TokenType.Semicolon, "Expected ';' after return statement.");
+            return new ReturnStmt(keyword, value);
         }
 
         private IStmt For()

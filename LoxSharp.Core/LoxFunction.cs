@@ -1,15 +1,16 @@
 ﻿namespace LoxSharp.Core
 {
-    public class LoxFunction(FunctionStmt declaration) : ILoxCallable
+    public class LoxFunction(FunctionStmt declaration, LoxEnvironment closure) : ILoxCallable
     {
         private readonly FunctionStmt declaration = declaration;
+        private readonly LoxEnvironment closure = closure;
 
         public string Identifier => declaration.Name.Lexeme;
         public int Arity => declaration.Parameters.Count;
 
         public RuntimeValue Call(Interpreter interpreter, List<RuntimeValue>? arguments)
         {
-            LoxEnvironment environment = new LoxEnvironment(interpreter.Globals);
+            LoxEnvironment environment = new LoxEnvironment(closure);
             if (arguments != null && declaration.Parameters.Count > 0)
             {
                 for (int i = 0; i < declaration.Parameters.Count; i++)
@@ -19,7 +20,14 @@
                 }
             }
 
-            interpreter.ExecuteBlock(declaration.Body, environment);
+            try
+            {
+                interpreter.ExecuteBlock(declaration.Body, environment);
+            }
+            catch(ReturnException returnValue)
+            {
+                return returnValue.Value ?? null;
+            }
             return null;
         }
 

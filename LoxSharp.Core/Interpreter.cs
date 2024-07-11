@@ -243,9 +243,18 @@
 
         public object? Visit(FunctionStmt stmt)
         {
-            LoxFunction function = new LoxFunction(stmt);
+            LoxFunction function = new LoxFunction(stmt, environment);
             environment.Define(function);
             return null;
+        }
+
+        public object? Visit(ReturnStmt stmt)
+        {
+            RuntimeValue? value = null;
+            if (stmt.Value != null)
+                value = Evaluate(stmt.Value);
+
+            throw new ReturnException(value);
         }
 
         // - Helpers -

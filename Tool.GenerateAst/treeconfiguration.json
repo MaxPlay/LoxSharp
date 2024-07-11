@@ -32,6 +32,7 @@
         "Function:token name, token[] parameters, statement[] body",
         "If:expression condition, statement thenBranch, statement? elseBranch",
         "Print:expression expression",
+        "Return:token keyword, expression? value",
         "Var:token name, expression initializer",
         "While:expression condition, statement body"
       ]

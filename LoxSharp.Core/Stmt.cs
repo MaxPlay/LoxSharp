@@ -12,6 +12,7 @@ namespace LoxSharp.Core
         T Visit(FunctionStmt stmt);
         T Visit(IfStmt stmt);
         T Visit(PrintStmt stmt);
+        T Visit(ReturnStmt stmt);
         T Visit(VarStmt stmt);
         T Visit(WhileStmt stmt);
     }
@@ -51,6 +52,14 @@ namespace LoxSharp.Core
     public class PrintStmt(IExpr expression) : IStmt
     {
         public IExpr Expression { get; } = expression;
+
+        public T Accept<T>(IStmtVisitor<T> visitor) => visitor.Visit(this);
+    }
+
+    public class ReturnStmt(ILoxToken keyword, IExpr? value) : IStmt
+    {
+        public ILoxToken Keyword { get; } = keyword;
+        public IExpr? Value { get; } = value;
 
         public T Accept<T>(IStmtVisitor<T> visitor) => visitor.Visit(this);
     }
