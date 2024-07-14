@@ -1,11 +1,8 @@
-﻿using Microsoft.VisualBasic;
-using System.Data;
-
-namespace LoxSharp.Core
+﻿namespace LoxSharp.Core
 {
     public class Parser(IReadOnlyList<ILoxToken> tokens)
     {
-        enum FunctionType
+        private enum FunctionType
         {
             Function
         }

@@ -37,7 +37,14 @@ namespace LoxSharp
             List<IStmt> statements = parser.Parse();
 
             if (parser.Errors.Count == 0)
-                interpreter.Interpret(statements);
+            {
+                Resolver resolver = new(interpreter);
+                resolver.Resolve(statements);
+                if (resolver.Errors.Count == 0)
+                    interpreter.Interpret(statements);
+                else
+                    errors.AddRange(resolver.Errors);
+            }
             else
                 errors.AddRange(parser.Errors);
 

@@ -10,6 +10,8 @@
         private readonly LoxEnvironment globals = new LoxEnvironment();
         private LoxEnvironment environment;
 
+        private readonly Dictionary<IExpr, int> locals = [];
+
         public Interpreter(TextWriter outWriter, TextWriter outError)
         {
             this.outWriter = outWriter;
@@ -63,7 +65,10 @@
         public RuntimeValue Visit(AssignExpr expr)
         {
             RuntimeValue value = Evaluate(expr.Value);
-            environment.Assign(expr.Name, ref value);
+            if (locals.TryGetValue(expr, out int depth))
+                environment.AssignAt(depth, expr.Name, value);
+            else
+                environment.Assign(expr.Name, ref value);
             return value;
         }
 
@@ -146,7 +151,7 @@
 
         public RuntimeValue Visit(VariableExpr expr)
         {
-            environment.Get(expr.Name, out RuntimeValue value);
+            LookupVariable(expr.Name, expr, out RuntimeValue value);
             return value;
         }
 
@@ -288,6 +293,18 @@
         {
             if (right.Type != RuntimeValueType.Numeric || left.Type != RuntimeValueType.Numeric)
                 throw new LoxRuntimeException(op, "Operands must be a numbers.");
+        }
+
+        public void Resolve(IExpr expression, int depth)
+        {
+            locals[expression] = depth;
+        }
+        private void LookupVariable(ILoxToken name, VariableExpr expr, out RuntimeValue value)
+        {
+            if (locals.TryGetValue(expr, out int depth))
+                environment.GetAt(depth, name.Lexeme, out value);
+            else
+                globals.Get(name, out value);
         }
     }
 }
