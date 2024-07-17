@@ -28,6 +28,7 @@
       "parameterIdentifier": "stmt",
       "definitions": [
         "Block:statement[] statements",
+        "Class:token name, Function[] methods",
         "Expression:expression expression",
         "Function:token name, token[] parameters, statement[] body",
         "If:expression condition, statement thenBranch, statement? elseBranch",

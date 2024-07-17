@@ -101,32 +101,41 @@ namespace Tool.GenerateAst
             public string ParameterIdentifier { get; set; } = string.Empty;
         }
 
+        class ParsedDomain
+        {
+            public string TypeIdentifier { get; set; } = string.Empty;
+            public Dictionary<string, string> Types { get; set; } = [];
+            public string Interface { get; set; } = string.Empty;
+            public string Visitor { get; set; } = string.Empty;
+            public string ParameterIdentifier { get; set; } = string.Empty;
+        }
+
         public AstBuilder(ILogger<AstBuilder> logger, TreeConfiguration configuration)
         {
             this.logger = logger;
             this.configuration = configuration;
 
-            foreach (var domain in configuration.Domains.Keys)
+            Dictionary<string, ParsedDomain> parsedDomains = configuration.Domains.Keys.Select(ParseDomain).ToDictionary(p => p.TypeIdentifier);
+            Dictionary<string, string> types = parsedDomains.SelectMany(p => p.Value.Types.Keys.Select(t => KeyValuePair.Create(t, t + p.Value.TypeIdentifier))).ToDictionary();
+
+            foreach (var domain in parsedDomains)
             {
-                LoadTypeConfiguration(domain);
+                domains[domain.Key] = LoadTypeConfiguration(domain.Value, types);
             }
         }
 
-        private void LoadTypeConfiguration(string domainIdentifier)
+        private ParsedDomain ParseDomain(string domainIdentifier)
         {
             if (!configuration.Domains.TryGetValue(domainIdentifier, out TreeConfigurationDomain? domainConfiguration))
                 throw new Exception(@$"Domain ""{domainIdentifier}"" not found in configuration");
 
-            if (!domains.TryGetValue(domainIdentifier, out Domain? domain))
+            ParsedDomain domain = new ParsedDomain
             {
-                domain = new Domain
-                {
-                    Visitor = domainConfiguration.Visitor,
-                    Interface = GetRealTypeIdentifier(domainConfiguration.Interface),
-                    ParameterIdentifier = domainConfiguration.ParameterIdentifier,
-                };
-                domains.Add(domainIdentifier, domain);
-            }
+                TypeIdentifier = domainIdentifier,
+                Visitor = domainConfiguration.Visitor,
+                Interface = GetRealTypeIdentifier(domainConfiguration.Interface),
+                ParameterIdentifier = domainConfiguration.ParameterIdentifier,
+            };
 
             domain.Types.Clear();
             foreach (var definition in domainConfiguration.Definitions)
@@ -137,21 +146,40 @@ namespace Tool.GenerateAst
                     logger.LogError("Type definition is invalid and will be skipped: {definition}", definition);
                     continue;
                 }
+                domain.Types[typeDef[0]] = typeDef[1];
+            }
 
+            return domain;
+
+            string GetRealTypeIdentifier(string placeholder)
+            {
+                if (configuration.Placeholders.TryGetValue(placeholder, out var type))
+                    return type;
+
+                throw new Exception("Invalid memberType.");
+            }
+        }
+
+        private Domain LoadTypeConfiguration(ParsedDomain value, Dictionary<string, string> types)
+        {
+            Domain domain = new Domain()
+            {
+                Visitor = value.Visitor,
+                Interface = value.Interface,
+                ParameterIdentifier = value.ParameterIdentifier,
+            };
+
+            foreach (var typeDefinition in value.Types)
+            {
                 AstType type = new AstType()
                 {
-                    Name = typeDef[0] + domainIdentifier,
+                    Name = types[typeDefinition.Key],
                 };
 
-                string[] members = typeDef[1].Split(',');
+                string[] members = typeDefinition.Value.Split(',');
                 foreach (var member in members)
                 {
                     string[] memberDef = member.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                    if (typeDef.Length != 2)
-                    {
-                        logger.LogError("Member definition is invalid and will be skipped: {member}", member);
-                        continue;
-                    }
                     string typeIdentifier = memberDef[0];
                     bool isNullable = typeIdentifier.EndsWith('?');
                     if (isNullable)
@@ -167,9 +195,15 @@ namespace Tool.GenerateAst
                 domain.Types.Add(type);
             }
 
+            return domain;
+
             string GetRealTypeIdentifier(string placeholder)
             {
                 if (configuration.Placeholders.TryGetValue(placeholder, out var type))
+                    return type;
+
+                // It's a valid type!
+                if (types.TryGetValue(placeholder, out type))
                     return type;
 
                 throw new Exception("Invalid memberType.");
