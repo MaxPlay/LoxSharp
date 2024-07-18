@@ -26,9 +26,9 @@
             }
             catch(ReturnException returnValue)
             {
-                return returnValue.Value ?? null;
+                return returnValue.Value ?? RuntimeValue.NullValue;
             }
-            return null;
+            return RuntimeValue.NullValue;
         }
 
         public override string ToString() => $"<fn {declaration.Name.Lexeme}>";

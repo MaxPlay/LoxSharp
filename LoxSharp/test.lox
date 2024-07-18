@@ -1,13 +1,3 @@
-﻿var a = "global";
-{
-  var b = "scoped";
-
-  fun showA() {
-    print a;
-    print b;
-  }
-
-  showA();
-  var a = "block";
-  showA();
-}
+﻿class Bagel {}
+var bagel = Bagel();
+print bagel;

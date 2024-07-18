@@ -113,7 +113,7 @@
                 case TokenType.EqualEqual:
                     return IsEqual(left, right);
                 default:
-                    return null;
+                    return RuntimeValue.NullValue;
             }
         }
 
@@ -129,7 +129,7 @@
                 LiteralBoolValue boolValue => boolValue.Value,
                 LiteralStringValue stringValue => stringValue.Value,
                 LiteralNumericValue numericValue => numericValue.Value,
-                _ => null
+                _ => RuntimeValue.NullValue
             };
         }
 
@@ -187,12 +187,12 @@
                 }
             }
 
-            if (callee.Type != RuntimeValueType.Function || callee.FunctionValue == null)
+            if ((callee.Type != RuntimeValueType.Function || callee.FunctionValue == null) && (callee.Type != RuntimeValueType.Class || callee.ClassValue == null))
                 throw new LoxRuntimeException(expr.Parent, "Can only call functions and classes.");
-            ILoxCallable function = callee.FunctionValue;
+            ILoxCallable? function = callee.Type == RuntimeValueType.Function ? callee.FunctionValue : callee.ClassValue;
             int argumentCount = arguments?.Count ?? 0;
-            if (argumentCount != function.Arity)
-                throw new LoxRuntimeException(expr.Parent, $"Expected {function.Arity} arguments but got {argumentCount}.");
+            if (argumentCount != function?.Arity)
+                throw new LoxRuntimeException(expr.Parent, $"Expected {function?.Arity} arguments but got {argumentCount}.");
 
             return function.Call(this, arguments);
         }
@@ -262,6 +262,14 @@
             throw new ReturnException(value);
         }
 
+        public object? Visit(ClassStmt stmt)
+        {
+            environment.Define(stmt.Name.Lexeme);
+            LoxClass loxClass = new LoxClass(stmt.Name.Lexeme);
+            environment.Assign(stmt.Name, loxClass);
+            return null;
+        }
+
         // - Helpers -
 
         private RuntimeValue Evaluate(IExpr expression) => expression.Accept(this);
@@ -299,6 +307,7 @@
         {
             locals[expression] = depth;
         }
+
         private void LookupVariable(ILoxToken name, VariableExpr expr, out RuntimeValue value)
         {
             if (locals.TryGetValue(expr, out int depth))

@@ -8,6 +8,7 @@ namespace LoxSharp.Core
     public interface IStmtVisitor<T>
     {
         T Visit(BlockStmt stmt);
+        T Visit(ClassStmt stmt);
         T Visit(ExpressionStmt stmt);
         T Visit(FunctionStmt stmt);
         T Visit(IfStmt stmt);
@@ -20,6 +21,14 @@ namespace LoxSharp.Core
     public class BlockStmt(List<IStmt> statements) : IStmt
     {
         public List<IStmt> Statements { get; } = statements;
+
+        public T Accept<T>(IStmtVisitor<T> visitor) => visitor.Visit(this);
+    }
+
+    public class ClassStmt(ILoxToken name, List<FunctionStmt> methods) : IStmt
+    {
+        public ILoxToken Name { get; } = name;
+        public List<FunctionStmt> Methods { get; } = methods;
 
         public T Accept<T>(IStmtVisitor<T> visitor) => visitor.Visit(this);
     }

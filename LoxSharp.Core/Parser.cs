@@ -4,7 +4,8 @@
     {
         private enum FunctionType
         {
-            Function
+            Function,
+            Method
         }
 
         private const int MAX_FUNCTION_PARAMETERS = 255;
@@ -43,6 +44,8 @@
         {
             try
             {
+                if (Match(TokenType.Class))
+                    return ClassDeclaration();
                 if (Match(TokenType.Function))
                     return FunctionDeclaration(FunctionType.Function);
                 if (Match(TokenType.Var))
@@ -59,6 +62,22 @@
                 Synchronize();
                 return null;
             }
+        }
+
+        private ClassStmt ClassDeclaration()
+        {
+            ILoxToken name = Consume(TokenType.Identifier, "Expected class name.");
+            Consume(TokenType.LeftBrace, "Expected '{' before class body.");
+
+            List<FunctionStmt> methods = [];
+            while (!Check(TokenType.RightBrace) && !IsAtEnd())
+            {
+                methods.Add(FunctionDeclaration(FunctionType.Method));
+            }
+
+            Consume(TokenType.RightBrace, "Expected '}' after class body.");
+
+            return new ClassStmt(name, methods);
         }
 
         private FunctionStmt FunctionDeclaration(FunctionType type)

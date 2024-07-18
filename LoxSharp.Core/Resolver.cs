@@ -80,6 +80,13 @@
             return null;
         }
 
+        public object? Visit(ClassStmt stmt)
+        {
+            Declare(stmt.Name);
+            Define(stmt.Name);
+            return null;
+        }
+
         // IExprVisitor implementation
 
         public object? Visit(AssignExpr expr)

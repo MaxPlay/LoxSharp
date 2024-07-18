@@ -26,6 +26,11 @@ namespace LoxSharp.Core
             values[value.Identifier] = RuntimeValue.MakeFunctionPointer(value);
         }
 
+        public void Define(string name)
+        {
+            values[name] = RuntimeValue.NullValue;
+        }
+
         public void Define(string name, ref RuntimeValue value)
         {
             values[name] = value;
@@ -47,6 +52,12 @@ namespace LoxSharp.Core
         public void GetAt(int depth, string name, out RuntimeValue value)
         {
             Ancestor(depth).values.TryGetValue(name, out value);
+        }
+
+        public void Assign(ILoxToken name, LoxClass loxClass)
+        {
+            RuntimeValue value = loxClass;
+            Assign(name, ref value);
         }
 
         public void Assign(ILoxToken name, ref RuntimeValue value)

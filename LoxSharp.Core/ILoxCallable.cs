@@ -43,7 +43,7 @@
             {
                 return func.Invoke(arguments[0]);
             }
-            return null;
+            return RuntimeValue.NullValue;
         }
     }
 }
