@@ -10,9 +10,12 @@ namespace LoxSharp.Core
         T Visit(AssignExpr expr);
         T Visit(BinaryExpr expr);
         T Visit(CallExpr expr);
+        T Visit(GetExpr expr);
         T Visit(GroupingExpr expr);
         T Visit(LiteralExpr expr);
         T Visit(LogicalExpr expr);
+        T Visit(SetExpr expr);
+        T Visit(ThisExpr expr);
         T Visit(UnaryExpr expr);
         T Visit(VariableExpr expr);
     }
@@ -43,6 +46,14 @@ namespace LoxSharp.Core
         public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
     }
 
+    public class GetExpr(IExpr obj, ILoxToken name) : IExpr
+    {
+        public IExpr Obj { get; } = obj;
+        public ILoxToken Name { get; } = name;
+
+        public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
+    }
+
     public class GroupingExpr(IExpr expression) : IExpr
     {
         public IExpr Expression { get; } = expression;
@@ -62,6 +73,22 @@ namespace LoxSharp.Core
         public IExpr Left { get; } = left;
         public ILoxToken Op { get; } = op;
         public IExpr Right { get; } = right;
+
+        public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
+    }
+
+    public class SetExpr(IExpr obj, ILoxToken name, IExpr value) : IExpr
+    {
+        public IExpr Obj { get; } = obj;
+        public ILoxToken Name { get; } = name;
+        public IExpr Value { get; } = value;
+
+        public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
+    }
+
+    public class ThisExpr(ILoxToken keyword) : IExpr
+    {
+        public ILoxToken Keyword { get; } = keyword;
 
         public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
     }

@@ -5,7 +5,15 @@
         private enum FunctionType
         {
             None,
-            Function
+            Function,
+            Initializer,
+            Method
+        }
+
+        private enum ClassType
+        {
+            None,
+            Class
         }
 
         private readonly Interpreter interpreter = interpreter;
@@ -13,6 +21,7 @@
         private readonly List<LoxError> errors = [];
         public IReadOnlyList<LoxError> Errors => errors;
         private FunctionType currentFunction = FunctionType.None;
+        private ClassType currentClass = ClassType.None;
 
         // IStmtVisitor implementation
 
@@ -21,6 +30,28 @@
             BeginScope();
             Resolve(stmt.Statements);
             EndScope();
+            return null;
+        }
+
+        public object? Visit(ClassStmt stmt)
+        {
+            ClassType enclosingClass = currentClass;
+            currentClass = ClassType.Class;
+
+            Declare(stmt.Name);
+            Define(stmt.Name);
+
+            BeginScope();
+            scopes[^1]["this"] = true;
+
+            foreach (FunctionStmt method in stmt.Methods)
+            {
+                FunctionType type = method.Name.Lexeme == LoxFunction.INITIALIZER_KEYWORD ? FunctionType.Initializer : FunctionType.Method;
+                ResolveFunction(method, type);
+            }
+            EndScope();
+
+            currentClass = enclosingClass;
             return null;
         }
 
@@ -60,7 +91,11 @@
                 AddError(stmt.Keyword, "Can't return from top-level code.");
 
             if (stmt.Value != null)
+            {
+                if (currentFunction == FunctionType.Initializer)
+                    AddError(stmt.Keyword, "Can't return a value from an initializer.");
                 Resolve(stmt.Value);
+            }
             return null;
         }
 
@@ -77,13 +112,6 @@
         {
             Resolve(stmt.Condition);
             Resolve(stmt.Body);
-            return null;
-        }
-
-        public object? Visit(ClassStmt stmt)
-        {
-            Declare(stmt.Name);
-            Define(stmt.Name);
             return null;
         }
 
@@ -117,6 +145,12 @@
             return null;
         }
 
+        public object? Visit(GetExpr expr)
+        {
+            Resolve(expr.Obj);
+            return null;
+        }
+
         public object? Visit(GroupingExpr expr)
         {
             Resolve(expr);
@@ -129,6 +163,22 @@
         {
             Resolve(expr.Left);
             Resolve(expr.Right);
+            return null;
+        }
+
+        public object? Visit(SetExpr expr)
+        {
+            Resolve(expr.Value);
+            Resolve(expr.Obj);
+            return null;
+        }
+
+        public object? Visit(ThisExpr expr)
+        {
+            if (currentClass == ClassType.None)
+                AddError(expr.Keyword, "Can't use 'this' keyword outside of a class.");
+
+            ResolveLocal(expr, expr.Keyword);
             return null;
         }
 

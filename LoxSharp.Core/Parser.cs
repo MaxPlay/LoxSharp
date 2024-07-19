@@ -244,6 +244,10 @@
                     ILoxToken name = variableExpression.Name;
                     return new AssignExpr(name, value);
                 }
+                else if (expr is GetExpr get)
+                {
+                    return new SetExpr(get.Obj, get.Name, value);
+                }
 
                 AddError(equals, "Invalid assignment target.");
             }
@@ -351,7 +355,14 @@
             while (true)
             {
                 if (Match(TokenType.LeftParenthesis))
+                {
                     expr = FinishCall(expr);
+                }
+                else if (Match(TokenType.Dot))
+                {
+                    ILoxToken name = Consume(TokenType.Identifier, "Expected property name after '.'.");
+                    expr = new GetExpr(expr, name);
+                }
                 else
                     break;
             }
@@ -400,6 +411,9 @@
                 return new LiteralExpr(token.Literal);
             }
 
+            if (Match(TokenType.This))
+                return new ThisExpr(Previous());
+
             if (Match(TokenType.Identifier))
                 return new VariableExpr(Previous());
 
@@ -439,9 +453,9 @@
                     case TokenType.Return:
                         return;
                 }
-            }
 
-            Advance();
+                Advance();
+            }
         }
 
         private bool Match(params TokenType[] tokens)

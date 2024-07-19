@@ -1,3 +1,18 @@
-﻿class Bagel {}
-var bagel = Bagel();
-print bagel;
+﻿class Platypus {
+  talk() {
+    print "plat plat!";
+  }
+  walk() {
+    print "waddle";
+  }
+
+  getName() {
+    return this.name;
+  }
+}
+
+var platypus = Platypus();
+platypus.name = "Platypus maximus";
+platypus.walk();
+platypus.talk();
+print platypus.getName();

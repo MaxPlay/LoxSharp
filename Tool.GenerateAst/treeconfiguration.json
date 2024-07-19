@@ -15,9 +15,12 @@
         "Assign:token name, expression value",
         "Binary:expression left, token op, expression right",
         "Call:expression callee, token parent, expression[]? arguments",
+        "Get:expression obj, token name",
         "Grouping:expression expression",
         "Literal:literal value",
         "Logical:expression left, token op, expression right",
+        "Set:expression obj, token name, expression value",
+        "This:token keyword",
         "Unary:token op, expression right",
         "Variable:token name"
       ]

@@ -1,12 +1,24 @@
-﻿namespace LoxSharp.Core
+﻿
+namespace LoxSharp.Core
 {
-    public class LoxFunction(FunctionStmt declaration, LoxEnvironment closure) : ILoxCallable
+    public class LoxFunction(FunctionStmt declaration, LoxEnvironment closure, bool isInitializer) : ILoxCallable
     {
+        public const string INITIALIZER_KEYWORD = "init";
+
         private readonly FunctionStmt declaration = declaration;
         private readonly LoxEnvironment closure = closure;
+        private readonly bool isInitializer = isInitializer;
 
         public string Identifier => declaration.Name.Lexeme;
         public int Arity => declaration.Parameters.Count;
+
+        public LoxFunction Bind(LoxInstance loxInstance)
+        {
+            LoxEnvironment environment = new LoxEnvironment(closure);
+            RuntimeValue thisValue = loxInstance;
+            environment.Define("this", ref thisValue);
+            return new LoxFunction(declaration, environment, isInitializer);
+        }
 
         public RuntimeValue Call(Interpreter interpreter, List<RuntimeValue>? arguments)
         {
@@ -24,8 +36,13 @@
             {
                 interpreter.ExecuteBlock(declaration.Body, environment);
             }
-            catch(ReturnException returnValue)
+            catch (ReturnException returnValue)
             {
+                if (isInitializer)
+                {
+                    closure.GetAt(0, "this", out RuntimeValue thisValue);
+                    return thisValue;
+                }
                 return returnValue.Value ?? RuntimeValue.NullValue;
             }
             return RuntimeValue.NullValue;

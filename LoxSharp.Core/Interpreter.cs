@@ -117,62 +117,6 @@
             }
         }
 
-        public RuntimeValue Visit(GroupingExpr expr)
-        {
-            return Evaluate(expr.Expression);
-        }
-
-        public RuntimeValue Visit(LiteralExpr expr)
-        {
-            return expr.Value switch
-            {
-                LiteralBoolValue boolValue => boolValue.Value,
-                LiteralStringValue stringValue => stringValue.Value,
-                LiteralNumericValue numericValue => numericValue.Value,
-                _ => RuntimeValue.NullValue
-            };
-        }
-
-        public RuntimeValue Visit(UnaryExpr expr)
-        {
-            RuntimeValue right = Evaluate(expr.Right);
-
-            switch (expr.Op.Type)
-            {
-                case TokenType.Minus:
-                    CheckNumberOperand(expr.Op, ref right);
-                    return -right.NumericValue;
-                case TokenType.Bang:
-                    return !right.BoolValue;
-                default:
-                    throw new NotImplementedException();
-            };
-        }
-
-        public RuntimeValue Visit(VariableExpr expr)
-        {
-            LookupVariable(expr.Name, expr, out RuntimeValue value);
-            return value;
-        }
-
-        public RuntimeValue Visit(LogicalExpr expr)
-        {
-            RuntimeValue left = Evaluate(expr.Left);
-
-            if (expr.Op.Type == TokenType.Or)
-            {
-                if (left.BoolValue)
-                    return left;
-            }
-            else
-            {
-                if (!left.BoolValue)
-                    return left;
-            }
-
-            return Evaluate(expr.Right);
-        }
-
         public RuntimeValue Visit(CallExpr expr)
         {
             RuntimeValue callee = Evaluate(expr.Callee);
@@ -197,28 +141,91 @@
             return function.Call(this, arguments);
         }
 
+        public RuntimeValue Visit(GetExpr expr)
+        {
+            RuntimeValue obj = Evaluate(expr.Obj);
+            if (obj.Type == RuntimeValueType.Object && obj.ObjectValue != null)
+            {
+                obj.ObjectValue.Get(expr.Name, out RuntimeValue property);
+                return property;
+            }
+            throw new LoxRuntimeException(expr.Name, "Only instances have properties.");
+        }
+
+        public RuntimeValue Visit(GroupingExpr expr)
+        {
+            return Evaluate(expr.Expression);
+        }
+
+        public RuntimeValue Visit(LogicalExpr expr)
+        {
+            RuntimeValue left = Evaluate(expr.Left);
+
+            if (expr.Op.Type == TokenType.Or)
+            {
+                if (left.BoolValue)
+                    return left;
+            }
+            else
+            {
+                if (!left.BoolValue)
+                    return left;
+            }
+
+            return Evaluate(expr.Right);
+        }
+
+        public RuntimeValue Visit(LiteralExpr expr)
+        {
+            return expr.Value switch
+            {
+                LiteralBoolValue boolValue => boolValue.Value,
+                LiteralStringValue stringValue => stringValue.Value,
+                LiteralNumericValue numericValue => numericValue.Value,
+                _ => RuntimeValue.NullValue
+            };
+        }
+
+        public RuntimeValue Visit(SetExpr expr)
+        {
+            RuntimeValue obj = Evaluate(expr.Obj);
+            if (obj.Type != RuntimeValueType.Object || obj.ObjectValue == null)
+                throw new LoxRuntimeException(expr.Name, "Only instances have fields.");
+
+            RuntimeValue value = Evaluate(expr.Value);
+            obj.ObjectValue.Set(expr.Name, ref value);
+            return value;
+        }
+
+        public RuntimeValue Visit(ThisExpr expr)
+        {
+            LookupVariable(expr.Keyword, expr, out RuntimeValue value);
+            return value;
+        }
+
+        public RuntimeValue Visit(UnaryExpr expr)
+        {
+            RuntimeValue right = Evaluate(expr.Right);
+
+            switch (expr.Op.Type)
+            {
+                case TokenType.Minus:
+                    CheckNumberOperand(expr.Op, ref right);
+                    return -right.NumericValue;
+                case TokenType.Bang:
+                    return !right.BoolValue;
+                default:
+                    throw new NotImplementedException();
+            };
+        }
+
+        public RuntimeValue Visit(VariableExpr expr)
+        {
+            LookupVariable(expr.Name, expr, out RuntimeValue value);
+            return value;
+        }
+
         // - IStmtVisitor -
-
-        public object? Visit(ExpressionStmt stmt)
-        {
-            Evaluate(stmt.Expression);
-            return null;
-        }
-
-        public object? Visit(PrintStmt stmt)
-        {
-            RuntimeValue runtimeValue = Evaluate(stmt.Expression);
-            outWriter.WriteLine(runtimeValue.StringValue);
-            return null;
-        }
-
-        public object? Visit(VarStmt stmt)
-        {
-            RuntimeValue value = Evaluate(stmt.Initializer);
-
-            environment.Define(stmt.Name.Lexeme, ref value);
-            return null;
-        }
 
         public object? Visit(BlockStmt stmt)
         {
@@ -226,6 +233,34 @@
 
             return null;
         }
+
+        public object? Visit(ClassStmt stmt)
+        {
+            environment.Define(stmt.Name.Lexeme);
+            Dictionary<string, LoxFunction> methods = [];
+            foreach (FunctionStmt method in stmt.Methods)
+            {
+                methods[method.Name.Lexeme] = new LoxFunction(method, environment, method.Name.Lexeme == LoxFunction.INITIALIZER_KEYWORD);
+            }
+
+            LoxClass loxClass = new LoxClass(stmt.Name.Lexeme, methods);
+            environment.Assign(stmt.Name, loxClass);
+            return null;
+        }
+
+        public object? Visit(ExpressionStmt stmt)
+        {
+            Evaluate(stmt.Expression);
+            return null;
+        }
+
+        public object? Visit(FunctionStmt stmt)
+        {
+            LoxFunction function = new LoxFunction(stmt, environment, false);
+            environment.Define(function);
+            return null;
+        }
+
 
         public object? Visit(IfStmt stmt)
         {
@@ -237,19 +272,10 @@
             return null;
         }
 
-        public object? Visit(WhileStmt stmt)
+        public object? Visit(PrintStmt stmt)
         {
-            while (Evaluate(stmt.Condition).BoolValue)
-            {
-                Execute(stmt.Body);
-            }
-            return null;
-        }
-
-        public object? Visit(FunctionStmt stmt)
-        {
-            LoxFunction function = new LoxFunction(stmt, environment);
-            environment.Define(function);
+            RuntimeValue runtimeValue = Evaluate(stmt.Expression);
+            outWriter.WriteLine(runtimeValue.StringValue);
             return null;
         }
 
@@ -262,11 +288,20 @@
             throw new ReturnException(value);
         }
 
-        public object? Visit(ClassStmt stmt)
+        public object? Visit(WhileStmt stmt)
         {
-            environment.Define(stmt.Name.Lexeme);
-            LoxClass loxClass = new LoxClass(stmt.Name.Lexeme);
-            environment.Assign(stmt.Name, loxClass);
+            while (Evaluate(stmt.Condition).BoolValue)
+            {
+                Execute(stmt.Body);
+            }
+            return null;
+        }
+
+        public object? Visit(VarStmt stmt)
+        {
+            RuntimeValue value = Evaluate(stmt.Initializer);
+
+            environment.Define(stmt.Name.Lexeme, ref value);
             return null;
         }
 
@@ -308,7 +343,7 @@
             locals[expression] = depth;
         }
 
-        private void LookupVariable(ILoxToken name, VariableExpr expr, out RuntimeValue value)
+        private void LookupVariable(ILoxToken name, IExpr expr, out RuntimeValue value)
         {
             if (locals.TryGetValue(expr, out int depth))
                 environment.GetAt(depth, name.Lexeme, out value);
