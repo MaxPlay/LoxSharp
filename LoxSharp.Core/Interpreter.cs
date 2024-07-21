@@ -236,6 +236,15 @@
 
         public object? Visit(ClassStmt stmt)
         {
+            LoxClass? superclass = null;
+            if (stmt.Superclass != null)
+            {
+                RuntimeValue foundSuperclass = Evaluate(stmt.Superclass);
+                if (foundSuperclass.Type != RuntimeValueType.Class || foundSuperclass.ClassValue == null)
+                    throw new LoxRuntimeException(stmt.Superclass.Name, "Superclass must be a class.");
+                superclass = foundSuperclass.ClassValue;
+            }
+
             environment.Define(stmt.Name.Lexeme);
             Dictionary<string, LoxFunction> methods = [];
             foreach (FunctionStmt method in stmt.Methods)
@@ -243,7 +252,7 @@
                 methods[method.Name.Lexeme] = new LoxFunction(method, environment, method.Name.Lexeme == LoxFunction.INITIALIZER_KEYWORD);
             }
 
-            LoxClass loxClass = new LoxClass(stmt.Name.Lexeme, methods);
+            LoxClass loxClass = new LoxClass(stmt.Name.Lexeme, superclass, methods);
             environment.Assign(stmt.Name, loxClass);
             return null;
         }

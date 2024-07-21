@@ -1,18 +1,9 @@
-﻿class Platypus {
-  talk() {
-    print "plat plat!";
-  }
-  walk() {
-    print "waddle";
-  }
-
-  getName() {
-    return this.name;
+﻿class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
   }
 }
 
-var platypus = Platypus();
-platypus.name = "Platypus maximus";
-platypus.walk();
-platypus.talk();
-print platypus.getName();
+class BostonCream < Doughnut {}
+
+BostonCream().cook();

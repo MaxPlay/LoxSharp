@@ -41,6 +41,14 @@
             Declare(stmt.Name);
             Define(stmt.Name);
 
+            if (stmt.Superclass != null)
+            {
+                if (stmt.Name.Lexeme != stmt.Superclass.Name.Lexeme)
+                    Resolve(stmt.Superclass);
+                else
+                    AddError(stmt.Superclass.Name, "A class can't interhit from itself.");
+            }
+
             BeginScope();
             scopes[^1]["this"] = true;
 

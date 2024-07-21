@@ -25,9 +25,10 @@ namespace LoxSharp.Core
         public T Accept<T>(IStmtVisitor<T> visitor) => visitor.Visit(this);
     }
 
-    public class ClassStmt(ILoxToken name, List<FunctionStmt> methods) : IStmt
+    public class ClassStmt(ILoxToken name, VariableExpr? superclass, List<FunctionStmt> methods) : IStmt
     {
         public ILoxToken Name { get; } = name;
+        public VariableExpr? Superclass { get; } = superclass;
         public List<FunctionStmt> Methods { get; } = methods;
 
         public T Accept<T>(IStmtVisitor<T> visitor) => visitor.Visit(this);

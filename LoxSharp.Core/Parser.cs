@@ -67,6 +67,14 @@
         private ClassStmt ClassDeclaration()
         {
             ILoxToken name = Consume(TokenType.Identifier, "Expected class name.");
+
+            VariableExpr? superclass = null;
+            if (Match(TokenType.Less))
+            {
+                Consume(TokenType.Identifier, "Expected superclass name.");
+                superclass = new VariableExpr(Previous());
+            }
+
             Consume(TokenType.LeftBrace, "Expected '{' before class body.");
 
             List<FunctionStmt> methods = [];
@@ -77,7 +85,7 @@
 
             Consume(TokenType.RightBrace, "Expected '}' after class body.");
 
-            return new ClassStmt(name, methods);
+            return new ClassStmt(name, superclass, methods);
         }
 
         private FunctionStmt FunctionDeclaration(FunctionType type)
