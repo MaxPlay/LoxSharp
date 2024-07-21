@@ -8,17 +8,17 @@ namespace LoxSharp.Core
 {
     public class LoxEnvironment
     {
-        private readonly LoxEnvironment? enclosing;
+        public LoxEnvironment? Enclosing { get; }
         private readonly Dictionary<string, RuntimeValue> values = [];
 
         public LoxEnvironment()
         {
-            enclosing = null;
+            Enclosing = null;
         }
 
         public LoxEnvironment(LoxEnvironment enclosing)
         {
-            this.enclosing = enclosing;
+            this.Enclosing = enclosing;
         }
 
         public void Define(ILoxCallable value)
@@ -36,13 +36,18 @@ namespace LoxSharp.Core
             values[name] = value;
         }
 
+        public void Define(string name, LoxClass type)
+        {
+            values[name] = type;
+        }
+
         public void Get(ILoxToken name, out RuntimeValue value)
         {
             if (!values.TryGetValue(name.Lexeme, out value))
             {
-                if (enclosing != null)
+                if (Enclosing != null)
                 {
-                    enclosing.Get(name, out value);
+                    Enclosing.Get(name, out value);
                     return;
                 }
                 throw new LoxRuntimeException(name, $"Undefined variable '{name.Lexeme}'.");
@@ -68,9 +73,9 @@ namespace LoxSharp.Core
                 return;
             }
 
-            if (enclosing != null)
+            if (Enclosing != null)
             {
-                enclosing.Assign(name, ref value);
+                Enclosing.Assign(name, ref value);
                 return;
             }
 
@@ -87,9 +92,9 @@ namespace LoxSharp.Core
             LoxEnvironment environment = this;
             for (int i = 0; i < depth; i++)
             {
-                if (environment.enclosing == null)
+                if (environment.Enclosing == null)
                     throw new ArgumentOutOfRangeException(nameof(depth), "LoxEnvironment depth too large.");
-                environment = environment.enclosing;
+                environment = environment.Enclosing;
             }
             return environment;
         }

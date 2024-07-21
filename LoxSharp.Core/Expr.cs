@@ -15,6 +15,7 @@ namespace LoxSharp.Core
         T Visit(LiteralExpr expr);
         T Visit(LogicalExpr expr);
         T Visit(SetExpr expr);
+        T Visit(SuperExpr expr);
         T Visit(ThisExpr expr);
         T Visit(UnaryExpr expr);
         T Visit(VariableExpr expr);
@@ -82,6 +83,14 @@ namespace LoxSharp.Core
         public IExpr Obj { get; } = obj;
         public ILoxToken Name { get; } = name;
         public IExpr Value { get; } = value;
+
+        public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
+    }
+
+    public class SuperExpr(ILoxToken keyword, ILoxToken method) : IExpr
+    {
+        public ILoxToken Keyword { get; } = keyword;
+        public ILoxToken Method { get; } = method;
 
         public T Accept<T>(IExprVisitor<T> visitor) => visitor.Visit(this);
     }

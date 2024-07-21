@@ -197,6 +197,24 @@
             return value;
         }
 
+        public RuntimeValue Visit(SuperExpr expr)
+        {
+            int distance = locals[expr];
+            environment.GetAt(distance, "super", out RuntimeValue superclass);
+            environment.GetAt(distance - 1, "this", out RuntimeValue obj);
+
+            LoxFunction? method = superclass.ClassValue?.FindMethod(expr.Method.Lexeme);
+            LoxInstance? instance = obj.ObjectValue;
+            if (instance == null || method == null)
+                throw new LoxRuntimeException(expr.Method, $"Undefined property '{expr.Method.Lexeme}'.");
+
+            LoxFunction? boundMethod = method?.Bind(instance);
+
+            return boundMethod == null
+                ? throw new LoxRuntimeException(expr.Method, $"Undefined property '{expr.Method.Lexeme}'.")
+                : RuntimeValue.MakeFunctionPointer(boundMethod);
+        }
+
         public RuntimeValue Visit(ThisExpr expr)
         {
             LookupVariable(expr.Keyword, expr, out RuntimeValue value);
@@ -246,6 +264,12 @@
             }
 
             environment.Define(stmt.Name.Lexeme);
+            if (superclass != null)
+            {
+                environment = new LoxEnvironment(environment);
+                environment.Define("super", superclass);
+            }
+
             Dictionary<string, LoxFunction> methods = [];
             foreach (FunctionStmt method in stmt.Methods)
             {
@@ -254,6 +278,10 @@
 
             LoxClass loxClass = new LoxClass(stmt.Name.Lexeme, superclass, methods);
             environment.Assign(stmt.Name, loxClass);
+
+            if (superclass != null && environment.Enclosing != null)
+                environment = environment.Enclosing;
+
             return null;
         }
 

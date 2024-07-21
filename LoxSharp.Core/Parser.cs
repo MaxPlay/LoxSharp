@@ -419,6 +419,14 @@
                 return new LiteralExpr(token.Literal);
             }
 
+            if (Match(TokenType.Super))
+            {
+                ILoxToken keyword = Previous();
+                Consume(TokenType.Dot, "Expected '.' after 'super'.");
+                ILoxToken method = Consume(TokenType.Identifier, "Expected superclass method name.");
+                return new SuperExpr(keyword, method);
+            }
+
             if (Match(TokenType.This))
                 return new ThisExpr(Previous());
 

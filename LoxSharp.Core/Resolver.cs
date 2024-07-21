@@ -13,7 +13,8 @@
         private enum ClassType
         {
             None,
-            Class
+            Class,
+            Subclass
         }
 
         private readonly Interpreter interpreter = interpreter;
@@ -44,9 +45,16 @@
             if (stmt.Superclass != null)
             {
                 if (stmt.Name.Lexeme != stmt.Superclass.Name.Lexeme)
+                {
+                    currentClass = ClassType.Subclass;
                     Resolve(stmt.Superclass);
+                    BeginScope();
+                    scopes[^1]["super"] = true;
+                }
                 else
+                {
                     AddError(stmt.Superclass.Name, "A class can't interhit from itself.");
+                }
             }
 
             BeginScope();
@@ -58,6 +66,8 @@
                 ResolveFunction(method, type);
             }
             EndScope();
+            if (stmt.Superclass != null)
+                EndScope();
 
             currentClass = enclosingClass;
             return null;
@@ -178,6 +188,22 @@
         {
             Resolve(expr.Value);
             Resolve(expr.Obj);
+            return null;
+        }
+
+        public object? Visit(SuperExpr expr)
+        {
+            switch (currentClass)
+            {
+                case ClassType.None:
+                    AddError(expr.Keyword, "Can't use 'super' keyword outside of a class.");
+                    break;
+                case ClassType.Class:
+                    AddError(expr.Keyword, "Can't use 'super' keyword in a class with no superclass.");
+                    break;
+            }
+
+            ResolveLocal(expr, expr.Keyword);
             return null;
         }
 

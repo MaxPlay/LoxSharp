@@ -20,6 +20,7 @@
         "Literal:literal value",
         "Logical:expression left, token op, expression right",
         "Set:expression obj, token name, expression value",
+        "Super:token keyword, token method",
         "This:token keyword",
         "Unary:token op, expression right",
         "Variable:token name"
